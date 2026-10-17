@@ -118,8 +118,8 @@ export const CollectionsAndSettingsView: React.FC<
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {myCreatedDesigns.map((d) => (
-                <div key={d.id} className="flex flex-col bg-white">
-                  <div className="aspect-[3/4] bg-[#EBEBEB] rounded-none relative overflow-hidden">
+                <div key={d.id} className="flex flex-col w-full h-full min-h-[300px] sm:min-h-[340px] bg-white">
+                  <div className="aspect-[3/4] w-full min-h-[220px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
                     <Card3DCanvas
                       color={d.tshirtColor}
                       size={(d.size as TShirtSize) || 'L'}
@@ -223,8 +223,8 @@ export const CollectionsAndSettingsView: React.FC<
                 )
 
                 return (
-                  <div key={d.id} className="flex flex-col bg-white">
-                    <div className="aspect-[3/4] bg-[#EBEBEB] rounded-none relative overflow-hidden">
+                  <div key={d.id} className="flex flex-col w-full h-full min-h-[300px] sm:min-h-[340px] bg-white">
+                    <div className="aspect-[3/4] w-full min-h-[220px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
                       <Card3DCanvas
                         color={d.tshirtColor}
                         size={(d.size as TShirtSize) || 'L'}

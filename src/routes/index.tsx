@@ -679,11 +679,11 @@ function MaamfoogouBoutiqueApp() {
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className={`border border-[#E5E5E5] bg-white p-3 space-y-3 animate-pulse ${
+                        className={`border border-[#E5E5E5] bg-white p-3 space-y-3 animate-pulse w-full h-full min-h-[320px] sm:min-h-[360px] md:min-h-[390px] ${
                           idx === 4 ? 'hidden lg:block' : ''
                         }`}
                       >
-                        <div className="aspect-[3/4] bg-[#F5F5F5] w-full" />
+                        <div className="aspect-[3/4] w-full min-h-[220px] sm:min-h-[260px] md:min-h-[290px] bg-[#F5F5F5]" />
                         <div className="space-y-2 pt-1">
                           <div className="h-3 bg-[#E5E5E5] w-3/4" />
                           <div className="h-2.5 bg-[#EEEEEE] w-1/2" />
@@ -737,7 +737,7 @@ function MaamfoogouBoutiqueApp() {
                     {catalogDesigns.slice(0, FEATURED_DESIGNS_LIMIT).map((design, idx) => (
                       <div
                         key={design.id}
-                        className={idx === 4 ? 'hidden lg:block' : ''}
+                        className={`w-full h-full min-w-0 flex flex-col ${idx === 4 ? 'hidden lg:block' : ''}`}
                       >
                         <FeaturedDesignCard
                           design={design}

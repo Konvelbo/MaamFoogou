@@ -9,11 +9,14 @@ import { Card3DCanvas } from './Card3DCanvas'
 import { normalizedTo3DElements } from '../../utils/designElementMapper'
 import type { TShirtSide, TShirtSize } from '../../types/configurator'
 
-interface FeaturedDesignCardProps {
+export interface FeaturedDesignCardProps {
   design: MaamfoogouDesign
   cardIndex: number
   isLikedByCurrentUser: boolean
   onSelectDesign: (designId: string) => void
+  width?: number | string
+  height?: number | string
+  className?: string
 }
 
 export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
@@ -21,6 +24,9 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
   cardIndex,
   isLikedByCurrentUser,
   onSelectDesign,
+  width,
+  height,
+  className = '',
 }) => {
   const navigate = useNavigate()
   // Diapositives 3D : 1. Face 3D -> 2. Dos 3D -> 3. Variantes de couleur 3D
@@ -191,10 +197,16 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           onSelectDesign(design.id)
         }
       }}
-      className="group flex flex-col bg-white cursor-pointer select-none"
+      style={{
+        ...(width !== undefined ? { width: typeof width === 'number' ? `${width}px` : width } : {}),
+        ...(height !== undefined ? { height: typeof height === 'number' ? `${height}px` : height } : {}),
+      }}
+      data-card-width={width}
+      data-card-height={height}
+      className={`group flex flex-col w-full h-full min-h-[320px] sm:min-h-[360px] md:min-h-[390px] bg-white cursor-pointer select-none ${className}`}
     >
       {/* Modèle 3D permanent (Card3DCanvas) avec image de secours anti-disparition */}
-      <div className="relative aspect-[3/4] w-full bg-[#F2F2F2] overflow-hidden rounded-none">
+      <div className="relative aspect-[3/4] w-full min-h-[220px] sm:min-h-[260px] md:min-h-[290px] bg-[#F2F2F2] overflow-hidden rounded-none">
         {/* Visuel de secours sous le canvas : garantit qu'un t-shirt est toujours visible à 100% */}
         <img
           src={currentSlide.side === 'back' ? design.previewBackUrl : design.previewFrontUrl}
@@ -306,8 +318,11 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           </Link>
         </h3>
 
-        <p className="text-[11px] text-[#757575] leading-none">
-          Par {design.creatorName}
+        <p className="text-[11px] text-[#757575] leading-none flex items-center justify-between">
+          <span>Par {design.creatorName}</span>
+          <span className="text-[10px] text-[#999999] font-medium uppercase tracking-wider">
+            Taille {design.size || 'L'}
+          </span>
         </p>
 
         <div className="mt-1 flex items-center justify-between text-[13px] text-[#111111]">
