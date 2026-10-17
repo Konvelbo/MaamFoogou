@@ -673,21 +673,19 @@ function MaamfoogouBoutiqueApp() {
                   </button>
                 </div>
 
-                {/* Grille 2x2 sur mobile, jusqu'à 5 sur desktop avec Skeletons BZB et fallback d'erreur */}
+                {/* Grille avec cards agrandies en largeur et en hauteur (1 col mobile, 2 sm, 3 md/lg, 4 xl) */}
                 {state.designs.length === 0 && (state.isSyncing || !state.hasSynced) ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 py-2">
-                    {Array.from({ length: 5 }).map((_, idx) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7 py-2">
+                    {Array.from({ length: 4 }).map((_, idx) => (
                       <div
                         key={idx}
-                        className={`border border-[#E5E5E5] bg-white p-3 space-y-3 animate-pulse w-full h-full min-h-[320px] sm:min-h-[360px] md:min-h-[390px] ${
-                          idx === 4 ? 'hidden lg:block' : ''
-                        }`}
+                        className="border border-[#E5E5E5] bg-white p-3.5 space-y-3 animate-pulse w-full h-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px]"
                       >
-                        <div className="aspect-[3/4] w-full min-h-[220px] sm:min-h-[260px] md:min-h-[290px] bg-[#F5F5F5]" />
+                        <div className="aspect-[3/4] w-full min-h-[340px] sm:min-h-[380px] md:min-h-[420px] bg-[#F5F5F5]" />
                         <div className="space-y-2 pt-1">
-                          <div className="h-3 bg-[#E5E5E5] w-3/4" />
+                          <div className="h-3.5 bg-[#E5E5E5] w-3/4" />
                           <div className="h-2.5 bg-[#EEEEEE] w-1/2" />
-                          <div className="h-3.5 bg-[#E5E5E5] w-1/3 pt-1" />
+                          <div className="h-4 bg-[#E5E5E5] w-1/3 pt-1" />
                         </div>
                       </div>
                     ))}
@@ -733,11 +731,11 @@ function MaamfoogouBoutiqueApp() {
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">
                     {catalogDesigns.slice(0, FEATURED_DESIGNS_LIMIT).map((design, idx) => (
                       <div
                         key={design.id}
-                        className={`w-full h-full min-w-0 flex flex-col ${idx === 4 ? 'hidden lg:block' : ''}`}
+                        className="w-full h-full min-w-0 flex flex-col"
                       >
                         <FeaturedDesignCard
                           design={design}

@@ -116,10 +116,10 @@ export const CollectionsAndSettingsView: React.FC<
               Vous n’avez pas encore sauvegardé de design personnalisé.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {myCreatedDesigns.map((d) => (
-                <div key={d.id} className="flex flex-col w-full h-full min-h-[300px] sm:min-h-[340px] bg-white">
-                  <div className="aspect-[3/4] w-full min-h-[220px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
+                <div key={d.id} className="flex flex-col w-full h-full min-h-[460px] sm:min-h-[500px] bg-white">
+                  <div className="aspect-[3/4] w-full min-h-[340px] sm:min-h-[380px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
                     <Card3DCanvas
                       color={d.tshirtColor}
                       size={(d.size as TShirtSize) || 'L'}
@@ -214,7 +214,7 @@ export const CollectionsAndSettingsView: React.FC<
               l’ajouter ici.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {savedLikedDesigns.map((d) => {
                 const stockStatus = checkVariantStockServer(
                   d.tshirtColor,
@@ -223,8 +223,8 @@ export const CollectionsAndSettingsView: React.FC<
                 )
 
                 return (
-                  <div key={d.id} className="flex flex-col w-full h-full min-h-[300px] sm:min-h-[340px] bg-white">
-                    <div className="aspect-[3/4] w-full min-h-[220px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
+                  <div key={d.id} className="flex flex-col w-full h-full min-h-[460px] sm:min-h-[500px] bg-white">
+                    <div className="aspect-[3/4] w-full min-h-[340px] sm:min-h-[380px] bg-[#EBEBEB] rounded-none relative overflow-hidden">
                       <Card3DCanvas
                         color={d.tshirtColor}
                         size={(d.size as TShirtSize) || 'L'}

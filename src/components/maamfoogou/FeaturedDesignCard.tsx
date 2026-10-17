@@ -203,10 +203,10 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       }}
       data-card-width={width}
       data-card-height={height}
-      className={`group flex flex-col w-full h-full min-h-[320px] sm:min-h-[360px] md:min-h-[390px] bg-white cursor-pointer select-none ${className}`}
+      className={`group flex flex-col w-full h-full min-h-[460px] sm:min-h-[500px] md:min-h-[540px] bg-white cursor-pointer select-none ${className}`}
     >
       {/* Modèle 3D permanent (Card3DCanvas) avec image de secours anti-disparition */}
-      <div className="relative aspect-[3/4] w-full min-h-[220px] sm:min-h-[260px] md:min-h-[290px] bg-[#F2F2F2] overflow-hidden rounded-none">
+      <div className="relative aspect-[3/4] w-full min-h-[340px] sm:min-h-[380px] md:min-h-[420px] bg-[#F2F2F2] overflow-hidden rounded-none">
         {/* Visuel de secours sous le canvas : garantit qu'un t-shirt est toujours visible à 100% */}
         <img
           src={currentSlide.side === 'back' ? design.previewBackUrl : design.previewFrontUrl}
@@ -307,7 +307,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           ))}
         </div>
 
-        <h3 className="text-[13px] font-normal text-[#111111] leading-snug line-clamp-1 group-hover:underline">
+        <h3 className="text-sm sm:text-[15px] font-medium text-[#111111] leading-snug line-clamp-1 group-hover:underline">
           <Link
             to="/modeles/$designId"
             params={{ designId: design.id }}
@@ -318,15 +318,15 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           </Link>
         </h3>
 
-        <p className="text-[11px] text-[#757575] leading-none flex items-center justify-between">
+        <p className="text-xs text-[#757575] leading-none flex items-center justify-between">
           <span>Par {design.creatorName}</span>
-          <span className="text-[10px] text-[#999999] font-medium uppercase tracking-wider">
+          <span className="text-[11px] text-[#999999] font-medium uppercase tracking-wider">
             Taille {design.size || 'L'}
           </span>
         </p>
 
-        <div className="mt-1 flex items-center justify-between text-[13px] text-[#111111]">
-          <span className="font-normal">
+        <div className="mt-1 flex items-center justify-between text-sm sm:text-[15px] text-[#111111]">
+          <span className="font-semibold">
             {design.price.toLocaleString('fr-FR')} FCFA
           </span>
 
