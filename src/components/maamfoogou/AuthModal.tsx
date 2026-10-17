@@ -429,11 +429,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
             <button
               type="button"
               onClick={() =>
-                handleQuickDemoLogin('admin@maamfoogou.bf', 'Admin3D!2026')
+                handleQuickDemoLogin('fiatechnologiecam@gmail.com', 'Admin3D!2026')
               }
               className="py-2.5 px-3 text-xs font-medium border border-[#CCCCCC] hover:border-[#111111] hover:bg-[#111111] hover:text-white rounded-none text-[#111111] transition-colors"
             >
-              Admin Atelier
+              Maamfoogou (Admin)
             </button>
           </div>
         </div>

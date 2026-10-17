@@ -75,19 +75,19 @@ export const seedDatabase = mutation({
 
     // 2. Création des comptes dans Convex (mots de passe hachés SHA-256 + sel)
     const adminId = await ctx.db.insert('users', {
-      name: 'Atelier Maamfoogou',
-      email: 'admin@maamfoogou.bf',
+      name: 'Maamfoogou',
+      email: 'fiatechnologiecam@gmail.com',
       passwordHash: adminPassHash,
-      phone: '+226 70 10 20 30',
+      phone: '+226 70 00 00 00',
       geoCoordinates: {
         city: 'Ouagadougou',
         district: 'Ouaga 2000',
-        landmark: 'Avenue Pascal Zagré',
+        landmark: 'Avenue Pascal Zagré — Siège Maamfoogou',
         lat: 12.3184,
         lng: -1.5122,
       },
       role: 'admin',
-      referralCode: 'MFO-ADM1',
+      referralCode: 'MAAMFOOGOU',
       createdAt: now - 86400000 * 30,
     })
 
@@ -188,7 +188,7 @@ export const seedDatabase = mutation({
     // Modèle 1 : Marque Luxe CELINE (Devant uniquement — Mélange Image sans fond + Texte)
     const d1 = await ctx.db.insert('designs', {
       ownerId: adminId,
-      creatorName: 'Atelier Maamfoogou',
+      creatorName: 'Maamfoogou',
       source: 'team',
       name: 'CELINE PARIS — Édition Triomphe',
       description:
@@ -199,6 +199,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 15000,
       featured: true,
+      allowRemix: false,
       likesCount: 48,
       commentsCount: 2,
       elements: [
@@ -249,7 +250,7 @@ export const seedDatabase = mutation({
     // Modèle 2 : Marque Streetwear PALM ANGELS (Devant + Dos simultanément — Texte devant + Image sans fond & Texte au dos)
     const d2 = await ctx.db.insert('designs', {
       ownerId: adminId,
-      creatorName: 'Atelier Maamfoogou',
+      creatorName: 'Maamfoogou',
       source: 'team',
       name: 'PALM ANGELS — Gothic Back Print',
       description:
@@ -260,6 +261,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 16500,
       featured: true,
+      allowRemix: false,
       likesCount: 62,
       commentsCount: 1,
       elements: [
@@ -310,7 +312,7 @@ export const seedDatabase = mutation({
     // Modèle 3 : Marque Luxe GUCCI (Devant Image sans fond uniquement + Dos Texte & Numéro)
     const d3 = await ctx.db.insert('designs', {
       ownerId: adminId,
-      creatorName: 'Atelier Maamfoogou',
+      creatorName: 'Maamfoogou',
       source: 'team',
       name: 'GUCCI — Blind For Love XXV',
       description:
@@ -321,6 +323,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 16000,
       featured: true,
+      allowRemix: false,
       likesCount: 54,
       commentsCount: 1,
       elements: [
@@ -370,9 +373,9 @@ export const seedDatabase = mutation({
 
     // Modèle 4 : Thème ANIMÉ / MANGA (Devant + Dos simultanément — Nuage Akatsuki devant + Sharingan & Kanji au dos)
     const d4 = await ctx.db.insert('designs', {
-      ownerId: creatorIdrissaId,
-      creatorName: 'Idrissa Kaboré',
-      source: 'creator',
+      ownerId: adminId,
+      creatorName: 'Maamfoogou',
+      source: 'team',
       name: 'AKATSUKI SHINOBI — Édition Manga',
       description:
         'Thème Animé japonais : nuage rouge Akatsuki sans fond sur le torse et Mangekyou Sharingan géant + lettrage AKATSUKI dans le dos.',
@@ -382,6 +385,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 13500,
       featured: true,
+      allowRemix: false,
       likesCount: 71,
       commentsCount: 2,
       elements: [
@@ -429,9 +433,9 @@ export const seedDatabase = mutation({
 
     // Modèle 5 : Thème LA GUERRE / TACTICAL (Dos uniquement — Mélange Image sans fond + Texte pochoir militaire)
     const d5 = await ctx.db.insert('designs', {
-      ownerId: creatorIdrissaId,
-      creatorName: 'Idrissa Kaboré',
-      source: 'creator',
+      ownerId: adminId,
+      creatorName: 'Maamfoogou',
+      source: 'team',
       name: 'GHOST RECON — Opération Tactique',
       description:
         'Thème Guerre & Forces Spéciales : face avant sobre sans marquage, dos imprimé avec l’emblème Crâne Ailé Tactique sans fond et matricule TASK FORCE 226.',
@@ -441,6 +445,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 13000,
       featured: true,
+      allowRemix: false,
       likesCount: 39,
       commentsCount: 1,
       elements: [
@@ -476,9 +481,9 @@ export const seedDatabase = mutation({
 
     // Modèle 6 : Thème LA JOIE / EMOJI (Devant + Dos simultanément — Emoji sans fond devant + Typographie Pop au dos)
     const d6 = await ctx.db.insert('designs', {
-      ownerId: creatorAminataId,
-      creatorName: 'Aminata Ouédraogo',
-      source: 'creator',
+      ownerId: adminId,
+      creatorName: 'Maamfoogou',
+      source: 'team',
       name: 'PURE JOIE — Emoji Dopamine Club',
       description:
         'Thème La Joie : composition d’emojis souriants et étincelles détourés sans fond sur le devant, manifeste GOOD VIBES ONLY au dos.',
@@ -488,6 +493,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 12000,
       featured: true,
+      allowRemix: false,
       likesCount: 44,
       commentsCount: 1,
       elements: [
@@ -537,9 +543,9 @@ export const seedDatabase = mutation({
 
     // Modèle 7 : Thème LE RAP / HIP-HOP (Devant + Dos simultanément — Couronne & Micro sans fond devant + Typo Rap au dos)
     const d7 = await ctx.db.insert('designs', {
-      ownerId: creatorAminataId,
-      creatorName: 'Aminata Ouédraogo',
-      source: 'creator',
+      ownerId: adminId,
+      creatorName: 'Maamfoogou',
+      source: 'team',
       name: '226 HIP-HOP — Légendes du Rap',
       description:
         'Thème Le Rap : couronne dorée, micro studio et badge Parental Advisory sans fond sur la poitrine, lettrage STRAIGHT OUTTA OUAGA au dos.',
@@ -549,6 +555,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 14000,
       featured: true,
+      allowRemix: false,
       likesCount: 59,
       commentsCount: 1,
       elements: [
@@ -599,7 +606,7 @@ export const seedDatabase = mutation({
     // Modèle 8 : Typographie Architecturale Pure (Devant uniquement — Texte seul)
     const d8 = await ctx.db.insert('designs', {
       ownerId: adminId,
-      creatorName: 'Atelier Maamfoogou',
+      creatorName: 'Maamfoogou',
       source: 'team',
       name: 'MANIFESTE 226 — Typographie Pure',
       description:
@@ -610,6 +617,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 11500,
       featured: true,
+      allowRemix: false,
       likesCount: 5,
       commentsCount: 0,
       elements: [

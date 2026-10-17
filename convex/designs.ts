@@ -267,7 +267,7 @@ export const saveDesign = mutation({
       featured: false,
       likesCount: 0,
       commentsCount: 0,
-      allowRemix: args.allowRemix ?? true,
+      allowRemix: args.allowRemix ?? false,
       parentDesignId: args.parentDesignId,
       parentDesignName,
       parentCreatorName,

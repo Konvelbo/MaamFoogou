@@ -80,7 +80,7 @@ export const Design3DIntegrationPlaceholder: React.FC<
       : 'Création Studio 3D Faso'
   )
   const [allowRemix, setAllowRemix] = useState<boolean>(
-    initialDesign?.allowRemix !== undefined ? initialDesign.allowRemix : true
+    initialDesign?.allowRemix !== undefined ? initialDesign.allowRemix : false
   )
   const [color, setColor] = useState<string>(initialColor)
   const [size, setSize] = useState<TShirtSize>(initialSize)
@@ -118,7 +118,7 @@ export const Design3DIntegrationPlaceholder: React.FC<
         : DEFAULT_3D_ELEMENTS
 
     const nextAllowRemix =
-      initialDesign.allowRemix !== undefined ? initialDesign.allowRemix : true
+      initialDesign.allowRemix !== undefined ? initialDesign.allowRemix : false
     setAllowRemix(nextAllowRemix)
     if (isRemix) {
       setDesignName(`${initialDesign.name} (Remix)`)
