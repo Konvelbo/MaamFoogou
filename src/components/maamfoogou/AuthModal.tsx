@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Mail, Lock, Phone, MapPin, User, X } from 'lucide-react'
-import { useSignIn, useUser } from '@clerk/clerk-react'
+import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 import {
   type PendingProtectedAction,
   authenticateUser,
@@ -37,11 +37,14 @@ function GoogleIcon() {
 }
 
 function ClerkGoogleButton({
+  mode = 'login',
   onActionResumed,
 }: {
+  mode?: 'login' | 'register'
   onActionResumed?: (action: PendingProtectedAction) => void
 }) {
   const { signIn, isLoaded: signInLoaded } = useSignIn()
+  const { signUp, isLoaded: signUpLoaded } = useSignUp()
   const { user } = useUser()
 
   useEffect(() => {
@@ -60,16 +63,37 @@ function ClerkGoogleButton({
   }, [user, onActionResumed])
 
   const handleSignInGoogle = async () => {
-    if (!signInLoaded || !signIn) return
+    const redirectUrl = window.location.href
+    const redirectUrlComplete = window.location.href
     try {
-      await signIn.authenticateWithRedirect({
-        strategy: 'oauth_google',
-        redirectUrl: window.location.href,
-        redirectUrlComplete: window.location.href,
-      })
+      if (mode === 'register' && signUpLoaded && signUp) {
+        await signUp.authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl,
+          redirectUrlComplete,
+        })
+      } else if (signInLoaded && signIn) {
+        await signIn.authenticateWithRedirect({
+          strategy: 'oauth_google',
+          redirectUrl,
+          redirectUrlComplete,
+        })
+      }
     } catch (err: any) {
-      console.error('Erreur Clerk Google:', err)
-      showToast(err.message || 'Erreur connexion Google avec Clerk', 'error')
+      console.warn('Tentative alternative Clerk OAuth:', err)
+      try {
+        if (signInLoaded && signIn) {
+          await signIn.authenticateWithRedirect({
+            strategy: 'oauth_google',
+            redirectUrl,
+            redirectUrlComplete,
+          })
+          return
+        }
+      } catch (fallbackErr: any) {
+        console.error('Erreur Clerk Google:', fallbackErr)
+        showToast(fallbackErr.message || 'Erreur connexion Google avec Clerk', 'error')
+      }
     }
   }
 
@@ -77,15 +101,15 @@ function ClerkGoogleButton({
     <button
       type="button"
       onClick={handleSignInGoogle}
-      className="w-full h-11 border border-[#CCCCCC] hover:border-[#111111] bg-white text-[#111111] text-xs font-semibold uppercase tracking-wider rounded-none flex items-center justify-center gap-2.5 transition-colors"
+      className="w-full h-11 border border-[#CCCCCC] hover:border-[#111111] bg-white text-[#111111] text-xs font-semibold uppercase tracking-wider rounded-none flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
     >
       <GoogleIcon />
-      <span>Continuer avec Google (Clerk)</span>
+      <span>{mode === 'register' ? 'S’inscrire avec Google (Clerk)' : 'Continuer avec Google (Clerk)'}</span>
     </button>
   )
 }
 
-function FallbackGoogleButton() {
+function FallbackGoogleButton({ mode = 'login' }: { mode?: 'login' | 'register' }) {
   return (
     <button
       type="button"
@@ -95,11 +119,11 @@ function FallbackGoogleButton() {
           'info'
         )
       }}
-      className="w-full h-11 border border-[#CCCCCC] hover:border-[#111111] bg-white text-[#111111] text-xs font-semibold uppercase tracking-wider rounded-none flex items-center justify-center gap-2.5 transition-colors"
+      className="w-full h-11 border border-[#CCCCCC] hover:border-[#111111] bg-white text-[#111111] text-xs font-semibold uppercase tracking-wider rounded-none flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
       title="Nécessite la clé VITE_CLERK_PUBLISHABLE_KEY"
     >
       <GoogleIcon />
-      <span>Continuer avec Google (Clerk)</span>
+      <span>{mode === 'register' ? 'S’inscrire avec Google (Clerk)' : 'Continuer avec Google (Clerk)'}</span>
     </button>
   )
 }
@@ -228,9 +252,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
           {/* Connexion Google avec Clerk */}
           <div className="mb-5">
             {CLERK_PUBLISHABLE_KEY ? (
-              <ClerkGoogleButton onActionResumed={onActionResumed} />
+              <ClerkGoogleButton mode={mode} onActionResumed={onActionResumed} />
             ) : (
-              <FallbackGoogleButton />
+              <FallbackGoogleButton mode={mode} />
             )}
 
             <div className="relative my-4 flex items-center justify-center">

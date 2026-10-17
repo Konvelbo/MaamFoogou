@@ -1,9 +1,28 @@
+import { useEffect } from 'react'
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { ClerkProvider } from '@clerk/clerk-react'
+import { ClerkProvider, useUser } from '@clerk/clerk-react'
+import { loginWithClerkUser } from '../services/maamfoogouStore'
 
 import appCss from '../styles.css?url'
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || ''
+
+function ClerkGlobalSync() {
+  const { user, isLoaded } = useUser()
+
+  useEffect(() => {
+    if (isLoaded && user && user.primaryEmailAddress) {
+      loginWithClerkUser({
+        clerkUserId: user.id,
+        email: user.primaryEmailAddress.emailAddress,
+        name: user.fullName || user.firstName || 'Membre Google',
+        avatarUrl: user.imageUrl,
+      })
+    }
+  }, [isLoaded, user])
+
+  return null
+}
 
 export const Route = createRootRoute({
   head: () => ({
@@ -58,6 +77,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   if (CLERK_PUBLISHABLE_KEY) {
     return (
       <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <ClerkGlobalSync />
         {content}
       </ClerkProvider>
     )

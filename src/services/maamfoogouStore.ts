@@ -623,6 +623,12 @@ export async function loginWithClerkUser(clerkData: {
   avatarUrl?: string
 }) {
   const pending = currentState.pendingAction
+  if (
+    currentState.currentUser?.clerkUserId === clerkData.clerkUserId &&
+    currentState.sessionToken
+  ) {
+    return { success: true, resumedAction: pending || undefined }
+  }
   try {
     const res = await (convexClient as any).mutation('users:syncClerkUser', {
       clerkUserId: clerkData.clerkUserId,
