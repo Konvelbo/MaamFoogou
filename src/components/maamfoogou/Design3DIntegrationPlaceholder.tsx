@@ -13,6 +13,13 @@ import {
 import { SceneCanvas } from '../canvas/SceneCanvas'
 import { ConfiguratorPanel } from '../editor/ConfiguratorPanel'
 import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '../examples/c-drawer-1'
+import {
   type MaamfoogouDesign,
   saveNormalizedDesign,
   useMaamfoogouStore,
@@ -105,23 +112,6 @@ export const Design3DIntegrationPlaceholder: React.FC<
   const [rightsConfirmed, setRightsConfirmed] = useState<boolean>(true)
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false)
-  const [touchStartY, setTouchStartY] = useState<number | null>(null)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartY(e.touches[0].clientY)
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartY === null) return
-    const touchEndY = e.changedTouches[0].clientY
-    const deltaY = touchEndY - touchStartY
-    if (deltaY < -35 && !isDrawerOpen) {
-      setIsDrawerOpen(true)
-    } else if (deltaY > 35 && isDrawerOpen) {
-      setIsDrawerOpen(false)
-    }
-    setTouchStartY(null)
-  }
 
   // Pile d'historique Annuler / Rétablir (Undo / Redo)
   const [history, setHistory] = useState<Array<CustomizerSnapshot>>([
@@ -371,13 +361,7 @@ export const Design3DIntegrationPlaceholder: React.FC<
         </div>
       </div>
 
-      {/* Backdrop semi-transparent sur mobile quand le Drawer Bottom est ouvert */}
-      {isDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-[2px] transition-opacity"
-          onClick={() => setIsDrawerOpen(false)}
-        />
-      )}
+
 
       {/* Grille Studio 3D : Scène 3D pleine page sur mobile + Panneau d'édition dans le Drawer Bottom */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-5 items-start">
@@ -473,30 +457,43 @@ export const Design3DIntegrationPlaceholder: React.FC<
           </div>
         </div>
 
-        {/* Panneau d'édition : Drawer Bottom sur Mobile, Colonne droite sur Desktop */}
-        <div
-          className={`fixed inset-x-0 bottom-0 z-50 bg-white border-t-2 border-[#111111] shadow-[0_-10px_40px_rgba(0,0,0,0.2)] transition-transform duration-300 ease-out flex flex-col lg:static lg:z-auto lg:border-t-0 lg:shadow-none lg:translate-y-0 lg:max-h-none lg:overflow-visible lg:bg-transparent lg:col-span-5 ${
-            isDrawerOpen
-              ? 'translate-y-0 max-h-[82dvh]'
-              : 'translate-y-[calc(100%-66px)] max-h-[66px] overflow-hidden'
-          }`}
-        >
-          {/* Poignée tactile de glissement (Mobile uniquement) */}
-          <div
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onClick={() => setIsDrawerOpen((prev) => !prev)}
-            className="lg:hidden w-full pt-2 pb-1 cursor-pointer select-none flex flex-col items-center shrink-0 bg-white"
-          >
-            <div className="w-12 h-1 bg-[#CCCCCC] rounded-full" />
-          </div>
+        {/* Colonne Droite Desktop : Panneau d'édition complet fixe */}
+        <div className="hidden lg:block lg:col-span-5">
+          <ConfiguratorPanel
+            color={color}
+            size={size}
+            activeSide={activeSide}
+            zoom={zoom}
+            isFrozen={isModelFrozen}
+            elements={elements}
+            selectedElementId={selectedElementId}
+            rightsConfirmed={rightsConfirmed}
+            canUndo={historyIndex > 0}
+            canRedo={historyIndex < history.length - 1}
+            isAddingToCart={isSaving}
+            onChangeColor={handleChangeColor}
+            onChangeSize={handleChangeSize}
+            onChangeSide={setActiveSide}
+            onChangeZoom={setZoom}
+            onToggleFrozen={() => setIsModelFrozen((prev) => !prev)}
+            onAddElement={handleAddElement}
+            onSelectElement={setSelectedElementId}
+            onUpdateElement={handleUpdateElement}
+            onDeleteElement={handleDeleteElement}
+            onCommitHistory={handleCommitHistory}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onChangeRightsConfirmed={setRightsConfirmed}
+            onAddToCart={() => handlePersist3DDesign(true)}
+          />
+        </div>
 
-          {/* PEEK BAR MOBILE (Visible uniquement quand le drawer est fermé) */}
+        {/* Mobile : Tiroir Bottom Drawer propulsé par @reui/c-drawer-1 */}
+        <div className="lg:hidden">
+          {/* Peek Bar fixe au bas de l'écran mobile agissant comme déclencheur du Drawer */}
           <div
             onClick={() => setIsDrawerOpen(true)}
-            className={`lg:hidden flex items-center justify-between px-4 pb-2.5 pt-0.5 cursor-pointer select-none shrink-0 ${
-              isDrawerOpen ? 'hidden' : 'flex'
-            }`}
+            className="fixed inset-x-0 bottom-0 z-40 bg-white border-t-2 border-[#111111] shadow-[0_-8px_30px_rgba(0,0,0,0.15)] flex items-center justify-between px-4 py-2.5 cursor-pointer select-none"
           >
             <div className="flex items-center gap-2.5">
               <span
@@ -523,7 +520,7 @@ export const Design3DIntegrationPlaceholder: React.FC<
                   e.stopPropagation()
                   handlePersist3DDesign(false)
                 }}
-                className="h-8 px-2.5 border border-[#111111] bg-white text-[#111111] text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 rounded-none"
+                className="h-8 px-2.5 border border-[#111111] bg-white text-[#111111] text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 rounded-none cursor-pointer"
               >
                 <Save className="w-3 h-3" />
                 <span>+40 XP</span>
@@ -536,7 +533,7 @@ export const Design3DIntegrationPlaceholder: React.FC<
                   e.stopPropagation()
                   handlePersist3DDesign(true)
                 }}
-                className="h-8 px-3 bg-[#111111] text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 rounded-none"
+                className="h-8 px-3 bg-[#111111] text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 rounded-none cursor-pointer"
               >
                 <ShoppingBag className="w-3 h-3" />
                 <span>Acheter</span>
@@ -544,112 +541,117 @@ export const Design3DIntegrationPlaceholder: React.FC<
             </div>
           </div>
 
-          {/* HEADER DU DRAWER OUVERT (Mobile uniquement) */}
-          <div
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            className={`lg:hidden flex items-center justify-between px-4 py-2 border-b border-[#E5E5E5] bg-[#FAFAFA] shrink-0 ${
-              isDrawerOpen ? 'flex' : 'hidden'
-            }`}
+          {/* Drawer @reui/c-drawer-1 */}
+          <Drawer
+            open={isDrawerOpen}
+            onOpenChange={setIsDrawerOpen}
+            showSwipeHandle
+            swipeDirection="down"
           >
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#111111]" />
-              <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#111111]">
-                Outils de modification 3D
-              </span>
-            </div>
+            <DrawerContent className="max-h-[85dvh] rounded-none border-t-2 border-[#111111] bg-white shadow-2xl flex flex-col">
+              <DrawerHeader className="flex flex-row items-center justify-between border-b border-[#E5E5E5] px-4 py-2.5 bg-[#FAFAFA] shrink-0">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#111111]" />
+                  <DrawerTitle className="text-xs font-bold uppercase tracking-[0.12em] text-[#111111]">
+                    Outils de modification 3D
+                  </DrawerTitle>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => setIsDrawerOpen(false)}
-              className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 border border-[#CCCCCC] bg-white text-[#111111] hover:border-[#111111] rounded-none"
-            >
-              <span>Voir 3D</span>
-              <ChevronDown className="w-3.5 h-3.5" />
-            </button>
-          </div>
+                <DrawerClose
+                  render={
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 border border-[#CCCCCC] bg-white text-[#111111] hover:border-[#111111] rounded-none cursor-pointer"
+                    >
+                      <span>Voir 3D</span>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  }
+                />
+              </DrawerHeader>
 
-          {/* CONTENU DU PANNEAU (Scrollable dans le drawer sur mobile, fluide sur desktop) */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 lg:p-0">
-            {/* Options mobiles supplémentaires : Nom du modèle & autorisation Remix */}
-            <div className="lg:hidden space-y-2 border-b border-[#E5E5E5] pb-3 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#111111] shrink-0">
-                  Nom :
-                </span>
-                <input
-                  type="text"
-                  value={designName}
-                  onChange={(e) => setDesignName(e.target.value)}
-                  placeholder="Nom de votre modèle 3D"
-                  className="h-8 px-2.5 text-xs border border-[#CCCCCC] rounded-none w-full text-[#111111] focus:outline-none focus:border-[#111111]"
+              <div className="no-scrollbar overflow-y-auto px-4 py-3 flex-1">
+                {/* Options mobiles supplémentaires : Nom du modèle & autorisation Remix */}
+                <div className="space-y-2 border-b border-[#E5E5E5] pb-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#111111] shrink-0">
+                      Nom :
+                    </span>
+                    <input
+                      type="text"
+                      value={designName}
+                      onChange={(e) => setDesignName(e.target.value)}
+                      placeholder="Nom de votre modèle 3D"
+                      className="h-8 px-2.5 text-xs border border-[#CCCCCC] rounded-none w-full text-[#111111] focus:outline-none focus:border-[#111111]"
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs text-[#111111] cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={allowRemix}
+                      onChange={(e) => setAllowRemix(e.target.checked)}
+                      className="w-4 h-4 rounded-none accent-[#111111]"
+                    />
+                    <span className="font-medium text-[11px]">
+                      Autoriser la personnalisation publique (remix)
+                    </span>
+                  </label>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => handlePersist3DDesign(false)}
+                      className="h-8.5 border border-[#111111] bg-white text-[#111111] text-[11px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Save className="w-3 h-3" />
+                      <span>Sauvegarder (+40 XP)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => handlePersist3DDesign(true)}
+                      className="h-8.5 bg-[#111111] text-white text-[11px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ShoppingBag className="w-3 h-3" />
+                      <span>Acheter ce modèle</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* ConfiguratorPanel complet */}
+                <ConfiguratorPanel
+                  color={color}
+                  size={size}
+                  activeSide={activeSide}
+                  zoom={zoom}
+                  isFrozen={isModelFrozen}
+                  elements={elements}
+                  selectedElementId={selectedElementId}
+                  rightsConfirmed={rightsConfirmed}
+                  canUndo={historyIndex > 0}
+                  canRedo={historyIndex < history.length - 1}
+                  isAddingToCart={isSaving}
+                  onChangeColor={handleChangeColor}
+                  onChangeSize={handleChangeSize}
+                  onChangeSide={setActiveSide}
+                  onChangeZoom={setZoom}
+                  onToggleFrozen={() => setIsModelFrozen((prev) => !prev)}
+                  onAddElement={handleAddElement}
+                  onSelectElement={setSelectedElementId}
+                  onUpdateElement={handleUpdateElement}
+                  onDeleteElement={handleDeleteElement}
+                  onCommitHistory={handleCommitHistory}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  onChangeRightsConfirmed={setRightsConfirmed}
+                  onAddToCart={() => handlePersist3DDesign(true)}
                 />
               </div>
-
-              <label className="flex items-center gap-2 text-xs text-[#111111] cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={allowRemix}
-                  onChange={(e) => setAllowRemix(e.target.checked)}
-                  className="w-4 h-4 rounded-none accent-[#111111]"
-                />
-                <span className="font-medium text-[11px]">
-                  Autoriser la personnalisation publique (remix)
-                </span>
-              </label>
-
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => handlePersist3DDesign(false)}
-                  className="h-8.5 border border-[#111111] bg-white text-[#111111] text-[11px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5"
-                >
-                  <Save className="w-3 h-3" />
-                  <span>Sauvegarder (+40 XP)</span>
-                </button>
-
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={() => handlePersist3DDesign(true)}
-                  className="h-8.5 bg-[#111111] text-white text-[11px] font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5"
-                >
-                  <ShoppingBag className="w-3 h-3" />
-                  <span>Acheter ce modèle</span>
-                </button>
-              </div>
-            </div>
-
-            {/* ConfiguratorPanel complet */}
-            <ConfiguratorPanel
-              color={color}
-              size={size}
-              activeSide={activeSide}
-              zoom={zoom}
-              isFrozen={isModelFrozen}
-              elements={elements}
-              selectedElementId={selectedElementId}
-              rightsConfirmed={rightsConfirmed}
-              canUndo={historyIndex > 0}
-              canRedo={historyIndex < history.length - 1}
-              isAddingToCart={isSaving}
-              onChangeColor={handleChangeColor}
-              onChangeSize={handleChangeSize}
-              onChangeSide={setActiveSide}
-              onChangeZoom={setZoom}
-              onToggleFrozen={() => setIsModelFrozen((prev) => !prev)}
-              onAddElement={handleAddElement}
-              onSelectElement={setSelectedElementId}
-              onUpdateElement={handleUpdateElement}
-              onDeleteElement={handleDeleteElement}
-              onCommitHistory={handleCommitHistory}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              onChangeRightsConfirmed={setRightsConfirmed}
-              onAddToCart={() => handlePersist3DDesign(true)}
-            />
-          </div>
+            </DrawerContent>
+          </Drawer>
         </div>
       </div>
     </div>
