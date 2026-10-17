@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Mail, Lock, Phone, MapPin, User, X } from 'lucide-react'
+import { Mail, Lock, Phone, MapPin, User, X, Eye, EyeOff } from 'lucide-react'
 import { useSignIn, useSignUp, useUser } from '@clerk/clerk-react'
 import {
   type PendingProtectedAction,
@@ -104,7 +104,7 @@ function ClerkGoogleButton({
       className="w-full h-11 border border-[#CCCCCC] hover:border-[#111111] bg-white text-[#111111] text-xs font-semibold uppercase tracking-wider rounded-none flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
     >
       <GoogleIcon />
-      <span>{mode === 'register' ? 'S’inscrire avec Google (Clerk)' : 'Continuer avec Google (Clerk)'}</span>
+      <span>{mode === 'register' ? 'S’inscrire avec Google' : 'Continuer avec Google'}</span>
     </button>
   )
 }
@@ -115,7 +115,7 @@ function FallbackGoogleButton({ mode = 'login' }: { mode?: 'login' | 'register' 
       type="button"
       onClick={() => {
         showToast(
-          'Authentification Clerk prête. Renseignez votre VITE_CLERK_PUBLISHABLE_KEY dans .env.local pour activer la redirection Google.',
+          'Authentification Google prête. Renseignez votre VITE_CLERK_PUBLISHABLE_KEY dans .env.local pour activer la redirection Google.',
           'info'
         )
       }}
@@ -123,7 +123,7 @@ function FallbackGoogleButton({ mode = 'login' }: { mode?: 'login' | 'register' 
       title="Nécessite la clé VITE_CLERK_PUBLISHABLE_KEY"
     >
       <GoogleIcon />
-      <span>{mode === 'register' ? 'S’inscrire avec Google (Clerk)' : 'Continuer avec Google (Clerk)'}</span>
+      <span>{mode === 'register' ? 'S’inscrire avec Google' : 'Continuer avec Google'}</span>
     </button>
   )
 }
@@ -138,6 +138,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('+226 70 ')
   const [city, setCity] = useState('Ouagadougou')
@@ -197,18 +199,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
     }
 
     if (result.resumedAction && onActionResumed) {
-      onActionResumed(result.resumedAction)
-    }
-  }
-
-  const handleQuickDemoLogin = (demoEmail: string, demoPass: string) => {
-    setError(null)
-    const result = authenticateUser({
-      mode: 'login',
-      email: demoEmail,
-      password: demoPass,
-    })
-    if (result.success && result.resumedAction && onActionResumed) {
       onActionResumed(result.resumedAction)
     }
   }
@@ -374,27 +364,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
             <div className="relative">
               <Lock className="w-4 h-4 text-[#757575] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
+                className="w-full h-10 pl-9 pr-10 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#111111] transition-colors p-1"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                title={showPassword ? 'Masquer' : 'Afficher'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
 
             {mode === 'register' && (
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#757575] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirmer le mot de passe"
                   aria-label="Confirmer le mot de passe"
-                  className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
+                  className="w-full h-10 pl-9 pr-10 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#757575] hover:text-[#111111] transition-colors p-1"
+                  aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  title={showConfirmPassword ? 'Masquer' : 'Afficher'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             )}
 
@@ -409,33 +425,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
           <p className="mt-3 text-center text-[11px] text-[#757575]">
             Votre action en cours reprendra automatiquement après connexion
           </p>
-        </div>
-
-        {/* Second bloc BZB "Ou continuer avec" (0px border-radius) */}
-        <div className="bg-white border border-[#E5E5E5] rounded-none p-5 text-center space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#111111]">
-            Accès rapide — Comptes de démonstration
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickDemoLogin('idrissa@createur.bf', 'Creator!2026')
-              }
-              className="py-2.5 px-3 text-xs font-medium border border-[#CCCCCC] hover:border-[#111111] hover:bg-[#111111] hover:text-white rounded-none text-[#111111] transition-colors"
-            >
-              Idrissa (Créateur)
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickDemoLogin('fiatechnologiecam@gmail.com', 'Admin3D!2026')
-              }
-              className="py-2.5 px-3 text-xs font-medium border border-[#CCCCCC] hover:border-[#111111] hover:bg-[#111111] hover:text-white rounded-none text-[#111111] transition-colors"
-            >
-              Maamfoogou (Admin)
-            </button>
-          </div>
         </div>
       </div>
     </div>
