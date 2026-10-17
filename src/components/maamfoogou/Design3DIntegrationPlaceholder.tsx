@@ -5,6 +5,7 @@ import { ConfiguratorPanel } from '../editor/ConfiguratorPanel'
 import {
   type MaamfoogouDesign,
   saveNormalizedDesign,
+  useMaamfoogouStore,
 } from '../../services/maamfoogouStore'
 import {
   normalizedTo3DElements,
@@ -57,6 +58,13 @@ function cloneSnapshot(snap: CustomizerSnapshot): CustomizerSnapshot {
 export const Design3DIntegrationPlaceholder: React.FC<
   Design3DIntegrationPlaceholderProps
 > = ({ initialDesign, onSavedDesign, onBuyDesignNow }) => {
+  const state = useMaamfoogouStore()
+  const currentUser = state.users.find((u) => u.id === state.currentUserId)
+  const isOwner = Boolean(
+    initialDesign && currentUser && initialDesign.ownerId === currentUser.id
+  )
+  const isRemix = Boolean(initialDesign && !isOwner)
+
   const initialColor = initialDesign?.tshirtColor || '#18181B'
   const initialSize = (initialDesign?.size as TShirtSize) || 'L'
   const initialElements =
@@ -65,7 +73,14 @@ export const Design3DIntegrationPlaceholder: React.FC<
       : DEFAULT_3D_ELEMENTS
 
   const [designName, setDesignName] = useState(
-    initialDesign ? `${initialDesign.name} (Perso 3D)` : 'Création Studio 3D Faso'
+    initialDesign
+      ? isRemix
+        ? `${initialDesign.name} (Remix)`
+        : `${initialDesign.name} (Perso 3D)`
+      : 'Création Studio 3D Faso'
+  )
+  const [allowRemix, setAllowRemix] = useState<boolean>(
+    initialDesign?.allowRemix !== undefined ? initialDesign.allowRemix : true
   )
   const [color, setColor] = useState<string>(initialColor)
   const [size, setSize] = useState<TShirtSize>(initialSize)
@@ -102,7 +117,14 @@ export const Design3DIntegrationPlaceholder: React.FC<
         ? normalizedTo3DElements(initialDesign.elements)
         : DEFAULT_3D_ELEMENTS
 
-    setDesignName(`${initialDesign.name} (Perso 3D)`)
+    const nextAllowRemix =
+      initialDesign.allowRemix !== undefined ? initialDesign.allowRemix : true
+    setAllowRemix(nextAllowRemix)
+    if (isRemix) {
+      setDesignName(`${initialDesign.name} (Remix)`)
+    } else {
+      setDesignName(`${initialDesign.name} (Perso 3D)`)
+    }
     setColor(nextColor)
     setSize(nextSize)
     setElements(nextEls)
@@ -217,10 +239,16 @@ export const Design3DIntegrationPlaceholder: React.FC<
       const normalizedElements = threeDToNormalizedElements(elements)
 
       const res = saveNormalizedDesign({
-        designId: initialDesign?.id,
+        designId: isRemix ? undefined : initialDesign?.id,
+        isRemix,
+        parentDesignId: isRemix ? initialDesign?.id : initialDesign?.parentDesignId,
+        parentDesignName: isRemix ? initialDesign?.name : initialDesign?.parentDesignName,
+        parentCreatorName: isRemix ? initialDesign?.creatorName : initialDesign?.parentCreatorName,
+        allowRemix,
         name: designName,
-        description:
-          'Création réalisée dans le configurateur 3D temps réel Maamfoogou (coton peigné 220g/m²).',
+        description: isRemix
+          ? `Remix personnalisé basé sur « ${initialDesign?.name} » par ${initialDesign?.creatorName}.`
+          : 'Création réalisée dans le configurateur 3D temps réel Maamfoogou (coton peigné 220g/m²).',
         tshirtColor: color,
         size,
         status: 'published',
@@ -245,20 +273,51 @@ export const Design3DIntegrationPlaceholder: React.FC<
   }
 
   return (
-    <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-5 space-y-5">
-      {/* Barre supérieure du Studio 3D : Nom de la création + Sauvegarder dans Mes collections + Commander */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E5E5] pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
-          <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#111111]">
-            Studio 3D :
+    <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-5 space-y-4">
+      {/* Alerte mode Remix 3D : informe clairement que l'original est préservé */}
+      {isRemix && initialDesign && (
+        <div className="bg-[#FAFAFA] border border-[#111111] p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-none">
+          <div className="flex items-center gap-2">
+            <span className="bg-[#111111] text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+              Mode Remix 3D
+            </span>
+            <span className="font-semibold text-[#111111]">
+              Basé sur « {initialDesign.name} » par {initialDesign.creatorName}
+            </span>
+          </div>
+          <span className="text-[#666666] text-[11px]">
+            Vos modifications créeront une nouvelle copie dans votre collection sans altérer le modèle de base.
           </span>
-          <input
-            type="text"
-            value={designName}
-            onChange={(e) => setDesignName(e.target.value)}
-            placeholder="Nom de votre modèle 3D"
-            className="h-9 px-3 text-xs border border-[#CCCCCC] rounded-none text-[#111111] focus:outline-none focus:border-[#111111] sm:min-w-[260px]"
-          />
+        </div>
+      )}
+
+      {/* Barre supérieure du Studio 3D : Nom de la création + Autorisation Remix + Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E5E5] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#111111]">
+              Studio 3D :
+            </span>
+            <input
+              type="text"
+              value={designName}
+              onChange={(e) => setDesignName(e.target.value)}
+              placeholder="Nom de votre modèle 3D"
+              className="h-9 px-3 text-xs border border-[#CCCCCC] rounded-none text-[#111111] focus:outline-none focus:border-[#111111] sm:min-w-[240px]"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-[#111111] cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={allowRemix}
+              onChange={(e) => setAllowRemix(e.target.checked)}
+              className="w-4 h-4 rounded-none accent-[#111111]"
+            />
+            <span className="font-medium text-[11px]">
+              Autoriser la personnalisation publique (copie / remix)
+            </span>
+          </label>
         </div>
 
         <div className="grid grid-cols-2 sm:flex items-center gap-2">

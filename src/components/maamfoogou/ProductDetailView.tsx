@@ -10,11 +10,13 @@ import {
   Flag,
   FlipHorizontal,
   Heart,
+  Lock,
   PackageCheck,
   RefreshCw,
   Share,
   ShieldAlert,
   Trash2,
+  Unlock,
   XCircle,
 } from 'lucide-react'
 import { COMMENT_MAX_LENGTH } from '../../../convex/xpConfig'
@@ -30,6 +32,7 @@ import {
   moderateDesignComment,
   openAuthForProtectedAction,
   reportDesignComment,
+  toggleDesignAllowRemix,
   toggleDesignLike,
   triggerMobileMoneyWebhook,
   useMaamfoogouStore,
@@ -54,6 +57,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 }) => {
   const state = useMaamfoogouStore()
   const currentUser = state.users.find((u) => u.id === state.currentUserId)
+  const isOwner = Boolean(currentUser && design.ownerId === currentUser.id)
+  const allowRemix = design.allowRemix !== false
+  const canRemixOrEdit = isOwner || allowRemix
   const isLiked = state.likes.some(
     (l) => l.userId === state.currentUserId && l.designId === design.id
   )
@@ -404,9 +410,42 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
         {/* Colonne Droite : Informations épurées (sans bordure de boîte englobante, comme BZB) */}
         <div className="lg:col-span-5 space-y-6 lg:pl-4">
           <div className="space-y-2">
+            {design.parentDesignName && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] bg-[#F5F5F5] border border-[#E5E5E5] text-[#111111]">
+                <span>Inspiré de</span>
+                <span className="font-semibold">« {design.parentDesignName} »</span>
+                {design.parentCreatorName && (
+                  <span className="text-[#666666]">par {design.parentCreatorName}</span>
+                )}
+              </div>
+            )}
+
             <h1 className="text-lg sm:text-xl font-normal text-[#111111]">
               {design.name} - {currentSelectedColorName}
             </h1>
+
+            {isOwner && (
+              <div className="pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => toggleDesignAllowRemix(design.id, !allowRemix)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium border border-[#CCCCCC] hover:border-[#111111] transition-colors rounded-none"
+                  title="Modifier l'autorisation de copie pour les autres utilisateurs"
+                >
+                  {allowRemix ? (
+                    <>
+                      <Unlock className="w-3 h-3 text-emerald-600" />
+                      <span>Personnalisation publique : Activée (cliquez pour bloquer)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-3 h-3 text-[#111111]" />
+                      <span>Personnalisation publique : Bloquée (cliquez pour autoriser)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <span className="text-lg font-normal text-[#111111]">
@@ -597,13 +636,32 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 : 'Rupture de stock'}
             </button>
 
-            <button
-              type="button"
-              onClick={() => onOpenCustomizerWithDesign(design)}
-              className="w-full h-11 px-4 rounded-none border border-[#111111] bg-white hover:bg-[#F5F5F5] text-[#111111] text-xs font-bold uppercase tracking-wider transition-colors"
-            >
-              Personnaliser ce modèle dans le Studio 3D
-            </button>
+            {canRemixOrEdit ? (
+              <button
+                type="button"
+                onClick={() => onOpenCustomizerWithDesign(design)}
+                className="w-full h-11 px-4 rounded-none border border-[#111111] bg-white hover:bg-[#F5F5F5] text-[#111111] text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+              >
+                <span>
+                  {isOwner
+                    ? 'Modifier ma création dans le Studio 3D'
+                    : 'Personnaliser ce modèle dans le Studio 3D'}
+                </span>
+                {!isOwner && (
+                  <span className="text-[10px] text-[#666666] font-normal lowercase">
+                    (créera votre copie)
+                  </span>
+                )}
+              </button>
+            ) : (
+              <div
+                title="Le créateur a réservé son modèle à l'achat direct et n'autorise pas de copies dérivées."
+                className="w-full h-11 px-4 rounded-none border border-[#E5E5E5] bg-[#F7F7F7] text-[#777777] text-xs font-medium uppercase tracking-wider flex items-center justify-center gap-2 select-none"
+              >
+                <Lock className="w-3.5 h-3.5 text-[#888888]" />
+                <span>Personnalisation désactivée par le créateur</span>
+              </div>
+            )}
           </div>
 
           {/* Formulaire Paiement Mode Test (0px border-radius) */}

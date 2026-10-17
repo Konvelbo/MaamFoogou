@@ -68,8 +68,11 @@ function ModelesDetailPage() {
         <ProductDetailView
           design={design}
           onBackToCatalog={() => navigate({ to: '/' })}
-          onOpenCustomizerWithDesign={(_d) => {
-            navigate({ to: '/' })
+          onOpenCustomizerWithDesign={(d) => {
+            navigate({
+              to: '/',
+              search: { customize: d.id },
+            })
           }}
         />
       ) : (

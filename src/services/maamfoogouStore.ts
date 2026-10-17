@@ -71,6 +71,10 @@ export interface MaamfoogouDesign {
   featured: boolean
   likesCount: number
   commentsCount: number
+  allowRemix?: boolean
+  parentDesignId?: string
+  parentDesignName?: string
+  parentCreatorName?: string
   previewFrontUrl: string
   previewBackUrl: string
   printFrontUrl?: string
@@ -281,6 +285,10 @@ export function mapConvexDesign(raw: any): MaamfoogouDesign {
     featured: Boolean(raw.featured),
     likesCount: raw.likesCount || 0,
     commentsCount: raw.commentsCount || 0,
+    allowRemix: raw.allowRemix !== undefined ? Boolean(raw.allowRemix) : true,
+    parentDesignId: raw.parentDesignId ? String(raw.parentDesignId) : undefined,
+    parentDesignName: raw.parentDesignName,
+    parentCreatorName: raw.parentCreatorName,
     previewFrontUrl: raw.previewFrontUrl || frontSvg,
     previewBackUrl: raw.previewBackUrl || backSvg,
     printFrontUrl: raw.printFrontUrl,
@@ -841,6 +849,11 @@ export function saveNormalizedDesign(params: {
   size?: string
   status: 'draft' | 'published'
   price?: number
+  allowRemix?: boolean
+  parentDesignId?: string
+  parentDesignName?: string
+  parentCreatorName?: string
+  isRemix?: boolean
   previewFrontUrl?: string
   previewBackUrl?: string
   printFrontUrl?: string
@@ -852,12 +865,16 @@ export function saveNormalizedDesign(params: {
     return { success: false, error: 'Connexion requise pour sauvegarder.' }
   }
 
-  const tempId = params.designId || `des_${Date.now()}`
+  // Si c'est un remix/copie d'un modèle d'autrui, ne jamais écraser le modèle de base :
+  // on omet designId pour générer une nouvelle entité chez l'utilisateur connecté.
+  const targetDesignId = params.isRemix ? undefined : params.designId
+  const tempId = targetDesignId || `des_${Date.now()}`
+
   ;(async () => {
     try {
       const res = await (convexClient as any).mutation('designs:saveDesign', {
         sessionToken: currentState.sessionToken,
-        designId: params.designId,
+        designId: targetDesignId,
         name: params.name,
         description: params.description,
         theme: params.theme,
@@ -865,6 +882,10 @@ export function saveNormalizedDesign(params: {
         size: params.size,
         status: params.status,
         price: params.price,
+        allowRemix: params.allowRemix,
+        parentDesignId: params.parentDesignId,
+        parentDesignName: params.parentDesignName,
+        parentCreatorName: params.parentCreatorName,
         previewFrontUrl: params.previewFrontUrl,
         previewBackUrl: params.previewBackUrl,
         printFrontUrl: params.printFrontUrl,
@@ -872,7 +893,12 @@ export function saveNormalizedDesign(params: {
         elements: params.elements,
       })
 
-      showToast('Design sauvegardé dans la base Convex !', 'success')
+      showToast(
+        params.isRemix
+          ? 'Votre copie personnalisée a été enregistrée dans vos collections ! (+40 XP)'
+          : 'Design sauvegardé dans la base Convex ! (+40 XP)',
+        'success'
+      )
       await syncFromConvex()
       return res
     } catch (err: any) {
@@ -881,6 +907,32 @@ export function saveNormalizedDesign(params: {
   })()
 
   return { success: true, designId: tempId }
+}
+
+export async function toggleDesignAllowRemix(designId: string, allowRemix: boolean) {
+  if (!currentState.sessionToken) return
+  updateState({
+    designs: currentState.designs.map((d) =>
+      d.id === designId ? { ...d, allowRemix } : d
+    ),
+  })
+  try {
+    await (convexClient as any).mutation('designs:toggleAllowRemix', {
+      sessionToken: currentState.sessionToken,
+      designId,
+      allowRemix,
+    })
+    showToast(
+      allowRemix
+        ? 'Personnalisation autorisée pour les autres utilisateurs.'
+        : 'Personnalisation verrouillée. Personne ne peut modifier ce modèle.',
+      'info'
+    )
+    syncFromConvex()
+  } catch (err: any) {
+    showToast(err.message || 'Erreur mise à jour autorisation', 'error')
+    syncFromConvex()
+  }
 }
 
 export function checkVariantStockServer(

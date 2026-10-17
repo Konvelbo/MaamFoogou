@@ -47,6 +47,10 @@ export default defineSchema({
     featured: v.boolean(),
     likesCount: v.number(),
     commentsCount: v.number(),
+    allowRemix: v.optional(v.boolean()), // Autoriser d'autres utilisateurs à remixer/personnaliser (copie)
+    parentDesignId: v.optional(v.id('designs')), // Traçabilité du modèle original si c'est un remix
+    parentDesignName: v.optional(v.string()),
+    parentCreatorName: v.optional(v.string()),
     // Fichiers Convex File Storage (aperçus 3D face/dos + exports d'impression haute résolution sans t-shirt)
     previewFront: v.optional(v.id('_storage')),
     previewBack: v.optional(v.id('_storage')),

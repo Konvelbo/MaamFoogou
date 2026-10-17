@@ -7,6 +7,7 @@ import {
   Heart,
   Lock,
   PackageCheck,
+  Unlock,
   XCircle,
 } from 'lucide-react'
 import {
@@ -14,6 +15,7 @@ import {
   checkVariantStockServer,
   getUserXpSummary,
   openAuthForProtectedAction,
+  toggleDesignAllowRemix,
   toggleDesignLike,
   updateUserProfile,
   useMaamfoogouStore,
@@ -135,6 +137,11 @@ export const CollectionsAndSettingsView: React.FC<
                       <h3 className="text-[13px] font-normal text-[#111111] truncate">
                         {d.name}
                       </h3>
+                      {d.parentDesignName && (
+                        <p className="text-[10px] text-[#666666] truncate">
+                          Remix de « {d.parentDesignName} »
+                        </p>
+                      )}
                       <p className="text-[11px] text-[#757575]">
                         Taille {d.size} • {d.price.toLocaleString('fr-FR')} FCFA
                       </p>
@@ -156,6 +163,31 @@ export const CollectionsAndSettingsView: React.FC<
                         Voir fiche
                       </button>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleDesignAllowRemix(d.id, d.allowRemix === false)
+                      }
+                      className={`w-full py-1.5 px-2 text-[10px] font-medium uppercase tracking-wider rounded-none border transition-colors flex items-center justify-center gap-1.5 ${
+                        d.allowRemix === false
+                          ? 'bg-[#F9F9F9] text-[#777777] border-[#E5E5E5] hover:border-[#111111]'
+                          : 'bg-white text-emerald-700 border-emerald-300 hover:border-emerald-600'
+                      }`}
+                      title="Contrôler si d'autres utilisateurs peuvent remixer ou personnaliser ce modèle"
+                    >
+                      {d.allowRemix === false ? (
+                        <>
+                          <Lock className="w-3 h-3 text-[#777777]" />
+                          <span>Personnalisation bloquée</span>
+                        </>
+                      ) : (
+                        <>
+                          <Unlock className="w-3 h-3 text-emerald-600" />
+                          <span>Personnalisation autorisée</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}

@@ -137,6 +137,10 @@ export const saveDesign = mutation({
     size: v.optional(v.string()),
     status: v.union(v.literal('draft'), v.literal('published')),
     price: v.optional(v.number()),
+    allowRemix: v.optional(v.boolean()),
+    parentDesignId: v.optional(v.id('designs')),
+    parentDesignName: v.optional(v.string()),
+    parentCreatorName: v.optional(v.string()),
     previewFront: v.optional(v.id('_storage')),
     previewBack: v.optional(v.id('_storage')),
     previewFrontUrl: v.optional(v.string()),
@@ -204,6 +208,10 @@ export const saveDesign = mutation({
         size: args.size,
         status: args.status,
         price: args.price ?? existing.price ?? 12000,
+        allowRemix:
+          args.allowRemix !== undefined
+            ? args.allowRemix
+            : (existing.allowRemix ?? true),
         previewFront: args.previewFront ?? existing.previewFront,
         previewBack: args.previewBack ?? existing.previewBack,
         previewFrontUrl:
@@ -216,6 +224,33 @@ export const saveDesign = mutation({
       })
 
       return { designId: args.designId, xpAwarded: 0 }
+    }
+
+    // Traçabilité du modèle parent en cas de personnalisation/remix
+    let parentDesignName = args.parentDesignName
+    let parentCreatorName = args.parentCreatorName
+
+    if (args.parentDesignId) {
+      const parent = await ctx.db.get(args.parentDesignId)
+      if (parent) {
+        if (parent.allowRemix === false && parent.ownerId !== user._id) {
+          throw new Error(
+            'Le créateur de ce modèle a désactivé la personnalisation par les autres utilisateurs.'
+          )
+        }
+        parentDesignName = parent.name
+        parentCreatorName = parent.creatorName
+        if (parent.ownerId !== user._id) {
+          try {
+            await awardServerXp(
+              ctx,
+              parent.ownerId,
+              'design_liked_by_other',
+              String(args.parentDesignId)
+            )
+          } catch (_) {}
+        }
+      }
     }
 
     const newId = await ctx.db.insert('designs', {
@@ -232,6 +267,10 @@ export const saveDesign = mutation({
       featured: false,
       likesCount: 0,
       commentsCount: 0,
+      allowRemix: args.allowRemix ?? true,
+      parentDesignId: args.parentDesignId,
+      parentDesignName,
+      parentCreatorName,
       previewFront: args.previewFront,
       previewBack: args.previewBack,
       previewFrontUrl: sanitizeSafeUrl(args.previewFrontUrl),
@@ -244,6 +283,30 @@ export const saveDesign = mutation({
 
     const xp = await awardServerXp(ctx, user._id, 'design_saved', String(newId))
     return { designId: newId, xpAwarded: xp.points }
+  },
+})
+
+/**
+ * Mutation protégée : permet au créateur d'autoriser ou d'interdire à tout moment
+ * la personnalisation (remix / copie) de son modèle par les autres utilisateurs.
+ */
+export const toggleAllowRemix = mutation({
+  args: {
+    sessionToken: v.string(),
+    designId: v.id('designs'),
+    allowRemix: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.sessionToken)
+    const design = await ctx.db.get(args.designId)
+    if (!design) throw new Error('Modèle introuvable')
+    if (design.ownerId !== user._id && user.role !== 'admin') {
+      throw new Error(
+        'Vous ne pouvez modifier les autorisations que de vos propres modèles.'
+      )
+    }
+    await ctx.db.patch(args.designId, { allowRemix: args.allowRemix })
+    return { success: true, allowRemix: args.allowRemix }
   },
 })
 

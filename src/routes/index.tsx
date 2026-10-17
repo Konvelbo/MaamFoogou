@@ -15,6 +15,7 @@ import {
   type MaamfoogouDesign,
   type PendingProtectedAction,
   clearToast,
+  fetchDesignById,
   getStoredReferralCode,
   getUserXpSummary,
   logoutUser,
@@ -76,6 +77,22 @@ function MaamfoogouBoutiqueApp() {
       if (found) {
         setSelectedDesignId(found.id)
         setActivePage('product_detail')
+      }
+    }
+
+    const customizeParam = params.get('customize')
+    if (customizeParam) {
+      const found = state.designs.find((d) => d.id === customizeParam)
+      if (found) {
+        setDesignToReloadIn3D(found)
+        setActivePage('customize_3d')
+      } else {
+        fetchDesignById(customizeParam).then((fetched) => {
+          if (fetched) {
+            setDesignToReloadIn3D(fetched)
+            setActivePage('customize_3d')
+          }
+        })
       }
     }
   }, [state.designs])
