@@ -19,11 +19,13 @@ export default defineSchema({
     role: v.union(v.literal('admin'), v.literal('user')),
     referralCode: v.string(),
     referredByUserId: v.optional(v.id('users')),
+    clerkUserId: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index('by_email', ['email'])
-    .index('by_referral_code', ['referralCode']),
+    .index('by_referral_code', ['referralCode'])
+    .index('by_clerk_user_id', ['clerkUserId']),
 
   // Sessions d'authentification
   sessions: defineTable({

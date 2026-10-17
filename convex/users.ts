@@ -158,6 +158,112 @@ export const authenticate = mutation({
 })
 
 /**
+ * Mutation protégée : synchronise un compte connecté via Clerk (ex: Google OAuth)
+ * et génère la session Convex locale avec attribution du parrainage et des points d'XP.
+ */
+export const syncClerkUser = mutation({
+  args: {
+    clerkUserId: v.string(),
+    email: v.string(),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    referralCode: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const cleanEmail = sanitizeServerText(args.email, 120).toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      throw new Error('Adresse email invalide.')
+    }
+
+    let user = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q: any) => q.eq('email', cleanEmail))
+      .first()
+
+    if (!user) {
+      let referredByUserId: any = undefined
+      if (args.referralCode) {
+        const refOwner = await ctx.db
+          .query('users')
+          .withIndex('by_referral_code', (q: any) =>
+            q.eq('referralCode', args.referralCode!.trim().toUpperCase())
+          )
+          .first()
+        if (refOwner && refOwner.email !== cleanEmail) {
+          referredByUserId = refOwner._id
+        }
+      }
+
+      const cleanName = sanitizeServerText(args.name || 'Membre Clerk', 60)
+      const newUserId = await ctx.db.insert('users', {
+        clerkUserId: args.clerkUserId,
+        name: cleanName,
+        email: cleanEmail,
+        passwordHash: 'clerk_authenticated_oauth',
+        phone: '+226 70 00 00 00',
+        geoCoordinates: {
+          city: 'Ouagadougou',
+          district: 'Centre / Zone 1',
+          landmark: 'Connexion Clerk Google',
+        },
+        role: 'user',
+        referralCode: generateShortReferralCode(cleanName),
+        referredByUserId,
+        avatarUrl: args.avatarUrl,
+        createdAt: Date.now(),
+      })
+
+      if (referredByUserId) {
+        await ctx.db.insert('referrals', {
+          referrerId: referredByUserId,
+          refereeId: newUserId,
+          status: 'registered',
+          createdAt: Date.now(),
+        })
+      }
+
+      await awardServerXp(ctx, newUserId, 'account_created', 'clerk_oauth_signup')
+      user = await ctx.db.get(newUserId)
+    } else {
+      if (!user.clerkUserId) {
+        await ctx.db.patch(user._id, {
+          clerkUserId: args.clerkUserId,
+          avatarUrl: args.avatarUrl || user.avatarUrl,
+        })
+      }
+    }
+
+    const token = await generateSecureToken()
+    const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 jours
+    await ctx.db.insert('sessions', {
+      userId: user!._id,
+      token,
+      expiresAt,
+    })
+
+    const xpSummary = await computeUserXpSummary(ctx, user!._id)
+
+    return {
+      token,
+      user: {
+        id: user!._id,
+        name: user!.name,
+        email: user!.email,
+        phone: user!.phone,
+        geoCoordinates: user!.geoCoordinates,
+        role: user!.role,
+        referralCode: user!.referralCode,
+        avatarUrl: user!.avatarUrl,
+        totalXp: xpSummary.totalXp,
+        level: xpSummary.level,
+        xpByDomain: xpSummary.xpByDomain,
+        unlockedRewards: xpSummary.unlockedRewards,
+      },
+    }
+  },
+})
+
+/**
  * Récupère le profil complet de l'utilisateur connecté avec son niveau (1-100), son XP et ses filleuls
  */
 export const getMe = query({

@@ -103,6 +103,8 @@ export interface MaamfoogouUser {
   role: 'admin' | 'user'
   referralCode: string
   referredByUserId?: string
+  avatarUrl?: string
+  clerkUserId?: string
   createdAt: number
   level?: number
   totalXp?: number
@@ -611,6 +613,65 @@ export function authenticateUser(params: {
   return {
     success: true,
     resumedAction: pending || undefined,
+  }
+}
+
+export async function loginWithClerkUser(clerkData: {
+  clerkUserId: string
+  email: string
+  name: string
+  avatarUrl?: string
+}) {
+  const pending = currentState.pendingAction
+  try {
+    const res = await (convexClient as any).mutation('users:syncClerkUser', {
+      clerkUserId: clerkData.clerkUserId,
+      email: clerkData.email,
+      name: clerkData.name,
+      avatarUrl: clerkData.avatarUrl,
+      referralCode: getStoredReferralCode() || undefined,
+    })
+
+    const newUser: MaamfoogouUser = {
+      id: String(res.user.id),
+      name: res.user.name,
+      email: res.user.email,
+      phone: res.user.phone,
+      geoCoordinates: res.user.geoCoordinates,
+      role: res.user.role,
+      referralCode: res.user.referralCode,
+      avatarUrl: res.user.avatarUrl,
+      createdAt: Date.now(),
+      level: res.user.level,
+      totalXp: res.user.totalXp,
+      xpByDomain: res.user.xpByDomain,
+      unlockedRewards: res.user.unlockedRewards,
+    }
+
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(SESSION_TOKEN_KEY, res.token)
+    }
+
+    updateState({
+      sessionToken: res.token,
+      currentUserId: newUser.id,
+      currentUser: newUser,
+      users: [newUser],
+      authModalOpen: false,
+      pendingAction: null,
+    })
+
+    showToast(`Bienvenue, ${newUser.name} ! Connexion Google validée.`, 'success')
+
+    if (pending && pending.type === 'like') {
+      await toggleDesignLike(pending.designId)
+    }
+
+    await syncFromConvex()
+    return { success: true, resumedAction: pending || undefined }
+  } catch (err: any) {
+    showToast(err.message || 'Erreur synchronisation Clerk', 'error')
+    return { success: false, error: err.message }
   }
 }
 

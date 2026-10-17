@@ -1,6 +1,9 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import { ClerkProvider } from '@clerk/clerk-react'
 
 import appCss from '../styles.css?url'
+
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || ''
 
 export const Route = createRootRoute({
   head: () => ({
@@ -40,7 +43,7 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  return (
+  const content = (
     <html lang="fr">
       <head>
         <HeadContent />
@@ -51,4 +54,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </body>
     </html>
   )
+
+  if (CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        {content}
+      </ClerkProvider>
+    )
+  }
+
+  return content
 }
