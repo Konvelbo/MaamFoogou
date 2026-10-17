@@ -250,7 +250,7 @@ function updateState(partial: Partial<StoreDatabaseState>) {
 }
 
 // Convertit un document de la table designs de Convex vers le modèle typé de l'application
-function mapConvexDesign(raw: any): MaamfoogouDesign {
+export function mapConvexDesign(raw: any): MaamfoogouDesign {
   const frontSvg = generateTShirtSvgUrl({
     tshirtColor: raw.tshirtColor || '#111111',
     view: 'front',
@@ -288,6 +288,19 @@ function mapConvexDesign(raw: any): MaamfoogouDesign {
     colorVariants: raw.colorVariants || [],
     elements: raw.elements || [],
     createdAt: raw.createdAt || Date.now(),
+  }
+}
+
+export async function fetchDesignById(designId: string): Promise<MaamfoogouDesign | null> {
+  const cached = currentState.designs.find((d) => d.id === designId)
+  if (cached) return cached
+  try {
+    const raw = await (convexClient as any).query('designs:getDesignById', { designId })
+    if (!raw) return null
+    return mapConvexDesign(raw)
+  } catch (err) {
+    console.error('Erreur fetchDesignById:', err)
+    return null
   }
 }
 
@@ -1112,7 +1125,7 @@ export function adminAddStockVariant(params: {
 export function generateProductShareLink(designId: string): string | null {
   const base = typeof window !== 'undefined' ? window.location.origin : ''
   const myCode = currentState.currentUser?.referralCode || 'REF226'
-  const shareUrl = `${base}/?design=${designId}&ref=${myCode}`
+  const shareUrl = `${base}/modeles/${designId}?ref=${myCode}`
 
   if (currentState.sessionToken) {
     ;(convexClient as any)

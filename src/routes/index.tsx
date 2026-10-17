@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   ArrowUpDown,
   LogOut,
@@ -133,12 +133,13 @@ function MaamfoogouBoutiqueApp() {
   const xpSummary = currentUser ? getUserXpSummary(currentUser.id) : null
   const activeReferralCookie = getStoredReferralCode()
 
+  const navigate = useNavigate()
+
   const handleOpenProductDetail = (designId: string) => {
-    setSelectedDesignId(designId)
-    setActivePage('product_detail')
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    navigate({
+      to: '/modeles/$designId',
+      params: { designId },
+    })
   }
 
   const handleNavigateProtected = (
@@ -161,12 +162,16 @@ function MaamfoogouBoutiqueApp() {
       if (action.route === '/collections') setActivePage('collections')
       else if (action.route === '/settings') setActivePage('settings')
       else if (action.designId) {
-        setSelectedDesignId(action.designId)
-        setActivePage('product_detail')
+        navigate({
+          to: '/modeles/$designId',
+          params: { designId: action.designId },
+        })
       }
     } else if (action.type === 'buy_now') {
-      setSelectedDesignId(action.designId)
-      setActivePage('product_detail')
+      navigate({
+        to: '/modeles/$designId',
+        params: { designId: action.designId },
+      })
     }
   }
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Heart, MessageSquare } from 'lucide-react'
 import {
   type MaamfoogouDesign,
@@ -21,6 +22,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
   isLikedByCurrentUser,
   onSelectDesign,
 }) => {
+  const navigate = useNavigate()
   // Diapositives 3D : 1. Face 3D -> 2. Dos 3D -> 3. Variantes de couleur 3D
   const slides = useMemo(() => {
     const base: Array<{
@@ -182,6 +184,10 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
         const dy = Math.abs(e.clientY - pointerDownPos.current.y)
         pointerDownPos.current = null
         if (dx < 6 && dy < 6) {
+          navigate({
+            to: '/modeles/$designId',
+            params: { designId: design.id },
+          })
           onSelectDesign(design.id)
         }
       }}
@@ -290,7 +296,14 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
         </div>
 
         <h3 className="text-[13px] font-normal text-[#111111] leading-snug line-clamp-1 group-hover:underline">
-          {design.name}
+          <Link
+            to="/modeles/$designId"
+            params={{ designId: design.id }}
+            onClick={(e) => e.stopPropagation()}
+            className="hover:underline"
+          >
+            {design.name}
+          </Link>
         </h3>
 
         <p className="text-[11px] text-[#757575] leading-none">

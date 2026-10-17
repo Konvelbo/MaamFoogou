@@ -104,7 +104,7 @@ export const Card3DCanvas: React.FC<Card3DCanvasProps> = React.memo(
     return (
       <div className="relative w-full h-full bg-[#F2F2F2] overflow-hidden rounded-none">
         <Canvas
-          frameloop="demand"
+          frameloop={isVisible ? 'demand' : 'never'}
           dpr={1}
           camera={{ position: [0, 0, 2.38], fov: 28, near: 0.1, far: 15 }}
           gl={{
