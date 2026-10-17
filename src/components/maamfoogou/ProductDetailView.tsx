@@ -358,7 +358,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             </div>
           </div>
 
-          {/* Colonne verticale de miniatures (bords francs rounded-none, bordure noire 1px sur la vue active) */}
+          {/* Colonne verticale de sélection d'angle 3D & teinte (aucun SVG 2D affiché) */}
           <div className="flex sm:flex-col gap-2.5 sm:w-20 shrink-0 overflow-x-auto">
             {galleryImages.map((img, idx) => (
               <button
@@ -371,17 +371,23 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     setSelectedColor(img.color.toLowerCase())
                   }
                 }}
-                className={`w-16 sm:w-20 aspect-[3/4] bg-[#E5E5E5] rounded-none overflow-hidden shrink-0 border transition-colors ${
+                className={`w-16 sm:w-20 aspect-[3/4] bg-[#F5F5F5] rounded-none overflow-hidden shrink-0 border transition-colors flex flex-col items-center justify-center gap-2 p-2 ${
                   idx === selectedImageIdx
                     ? 'border-[#111111]'
-                    : 'border-transparent hover:border-[#BDBDBD]'
+                    : 'border-[#E5E5E5] hover:border-[#999999]'
                 }`}
               >
-                <img
-                  src={img.url}
-                  alt={img.label}
-                  className="w-full h-full object-cover"
+                <span
+                  className="w-7 h-7 rounded-[2px] border border-[#CCCCCC]"
+                  style={{ backgroundColor: img.color }}
                 />
+                <span className="text-[10px] font-semibold uppercase tracking-tight text-[#111111] text-center leading-tight">
+                  {img.id === 'front'
+                    ? 'Face 3D'
+                    : img.id === 'back'
+                      ? 'Dos 3D'
+                      : img.label}
+                </span>
               </button>
             ))}
           </div>
@@ -938,11 +944,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 )}
 
                 {c.photoUrl && (
-                  <img
-                    src={c.photoUrl}
-                    alt="Avis photo"
-                    className="w-20 h-24 object-cover bg-[#E5E5E5] rounded-none"
-                  />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#F5F5F5] border border-[#E5E5E5] rounded-[4px] text-[11px] text-[#111111]">
+                    <Camera className="w-3.5 h-3.5 text-[#0F5132]" />
+                    Avis vérifié avec photo portée (+100 XP)
+                  </span>
                 )}
 
                 <div className="flex items-center gap-4 text-[11px] text-[#666666]">

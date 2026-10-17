@@ -4,7 +4,7 @@ import {
   type MaamfoogouDesign,
   toggleDesignLike,
 } from '../../services/maamfoogouStore'
-import { SceneCanvas } from '../canvas/SceneCanvas'
+import { Card3DCanvas } from './Card3DCanvas'
 import { normalizedTo3DElements } from '../../utils/designElementMapper'
 import type { TShirtSide, TShirtSize } from '../../types/configurator'
 
@@ -28,21 +28,18 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       label: string
       side: TShirtSide
       color: string
-      url: string
     }> = [
       {
         id: 'front',
         label: 'Vue Face 3D',
         side: 'front',
         color: design.tshirtColor,
-        url: design.previewFrontUrl,
       },
       {
         id: 'back',
         label: 'Vue Dos 3D',
         side: 'back',
         color: design.tshirtColor,
-        url: design.previewBackUrl,
       },
     ]
 
@@ -51,16 +48,10 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       label: v.label,
       side: 'front' as TShirtSide,
       color: v.color,
-      url: v.previewUrl,
     }))
 
     return [...base, ...variants]
-  }, [
-    design.previewFrontUrl,
-    design.previewBackUrl,
-    design.colorVariants,
-    design.tshirtColor,
-  ])
+  }, [design.colorVariants, design.tshirtColor])
 
   const elements3D = useMemo(
     () => normalizedTo3DElements(design.elements),
@@ -69,7 +60,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
 
   const [activeSlide, setActiveSlide] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(true)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
 
   // État optimiste du bouton Like (Section 5)
@@ -97,7 +88,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
     return () => mediaQuery.removeEventListener('change', handler)
   }, [])
 
-  // 2. IntersectionObserver : active le modèle 3D et le carrousel uniquement lorsque la carte est visible à l'écran
+  // 2. IntersectionObserver : met en pause le frameloop hors écran SANS démonter le canvas 3D (0 latence au scroll)
   useEffect(() => {
     const el = cardRef.current
     if (!el || typeof IntersectionObserver === 'undefined') {
@@ -112,7 +103,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           setIsVisible(entry.isIntersecting)
         }
       },
-      { threshold: 0.2 }
+      { rootMargin: '150px 0px', threshold: 0.05 }
     )
 
     observer.observe(el)
@@ -139,17 +130,6 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       if (intervalId) clearInterval(intervalId)
     }
   }, [prefersReducedMotion, isPaused, isVisible, slides.length, cardIndex])
-
-  // 4. Préchargement de la seule diapositive suivante
-  useEffect(() => {
-    if (!isVisible || slides.length <= 1 || typeof window === 'undefined') return
-    const nextIndex = (activeSlide + 1) % slides.length
-    const nextSlide = slides[nextIndex]
-    if (!nextSlide?.url) return
-
-    const preloader = new Image()
-    preloader.src = nextSlide.url
-  }, [activeSlide, isVisible, slides])
 
   const handleToggleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -198,33 +178,21 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
         const dx = Math.abs(e.clientX - pointerDownPos.current.x)
         const dy = Math.abs(e.clientY - pointerDownPos.current.y)
         pointerDownPos.current = null
-        // Si l'utilisateur clique sans faire tourner la caméra 3D (< 6px), ouvrir la fiche du modèle
         if (dx < 6 && dy < 6) {
           onSelectDesign(design.id)
         }
       }}
       className="group flex flex-col bg-white cursor-pointer select-none"
     >
-      {/* Scène 3D temps réel dans la carte (bords francs rounded-none, aucun rounded > 8px) */}
-      <div className="relative aspect-[3/4] w-full bg-[#18181B] overflow-hidden rounded-none [&>div]:!rounded-none [&>div]:!border-0">
-        {isVisible ? (
-          <SceneCanvas
-            color={currentSlide.color}
-            size={(design.size as TShirtSize) || 'L'}
-            activeSide={currentSlide.side}
-            zoom={1.08}
-            isFrozen={false}
-            elements={elements3D}
-            selectedElementId={null}
-          />
-        ) : (
-          <img
-            src={currentSlide.url}
-            alt={design.name}
-            loading="lazy"
-            className="w-full h-full object-cover"
-          />
-        )}
+      {/* Modèle 3D permanent (Card3DCanvas) : aucun démontage au scroll et aucun SVG 2D affiché */}
+      <div className="relative aspect-[3/4] w-full bg-[#E5E5E5] overflow-hidden rounded-none">
+        <Card3DCanvas
+          color={currentSlide.color}
+          size={(design.size as TShirtSize) || 'L'}
+          activeSide={currentSlide.side}
+          isVisible={isVisible}
+          elements={elements3D}
+        />
 
         {/* Badges minimalistes en haut à gauche (rounded-[4px] max) */}
         <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">

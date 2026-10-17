@@ -18,7 +18,7 @@ import {
   updateUserProfile,
   useMaamfoogouStore,
 } from '../../services/maamfoogouStore'
-import { SceneCanvas } from '../canvas/SceneCanvas'
+import { Card3DCanvas } from './Card3DCanvas'
 import { normalizedTo3DElements } from '../../utils/designElementMapper'
 import type { TShirtSize } from '../../types/configurator'
 
@@ -116,15 +116,13 @@ export const CollectionsAndSettingsView: React.FC<
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {myCreatedDesigns.map((d) => (
                 <div key={d.id} className="flex flex-col bg-white">
-                  <div className="aspect-[3/4] bg-[#18181B] rounded-none relative overflow-hidden [&>div]:!rounded-none [&>div]:!border-0">
-                    <SceneCanvas
+                  <div className="aspect-[3/4] bg-[#E5E5E5] rounded-none relative overflow-hidden">
+                    <Card3DCanvas
                       color={d.tshirtColor}
                       size={(d.size as TShirtSize) || 'L'}
                       activeSide="front"
-                      zoom={1.08}
-                      isFrozen={false}
+                      isVisible={true}
                       elements={normalizedTo3DElements(d.elements)}
-                      selectedElementId={null}
                     />
                     <span className="pointer-events-none absolute top-3 left-3 z-10 px-2 py-0.5 text-[10px] font-bold uppercase bg-[#111111] text-white rounded-[4px]">
                       {d.status === 'published' ? 'Publié' : 'Brouillon'}
@@ -193,15 +191,13 @@ export const CollectionsAndSettingsView: React.FC<
 
                 return (
                   <div key={d.id} className="flex flex-col bg-white">
-                    <div className="aspect-[3/4] bg-[#18181B] rounded-none relative overflow-hidden [&>div]:!rounded-none [&>div]:!border-0">
-                      <SceneCanvas
+                    <div className="aspect-[3/4] bg-[#E5E5E5] rounded-none relative overflow-hidden">
+                      <Card3DCanvas
                         color={d.tshirtColor}
                         size={(d.size as TShirtSize) || 'L'}
                         activeSide="front"
-                        zoom={1.08}
-                        isFrozen={false}
+                        isVisible={true}
                         elements={normalizedTo3DElements(d.elements)}
-                        selectedElementId={null}
                       />
 
                       <button

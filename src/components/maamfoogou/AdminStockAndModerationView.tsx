@@ -20,6 +20,9 @@ import {
   triggerMobileMoneyWebhook,
   useMaamfoogouStore,
 } from '../../services/maamfoogouStore'
+import { Card3DCanvas } from './Card3DCanvas'
+import { normalizedTo3DElements } from '../../utils/designElementMapper'
+import type { TShirtSize } from '../../types/configurator'
 
 export const AdminStockAndModerationView: React.FC = () => {
   const state = useMaamfoogouStore()
@@ -561,16 +564,15 @@ export const AdminStockAndModerationView: React.FC = () => {
                 {design && (
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-stone-50 p-4 rounded-sm border border-stone-200">
                     <div className="lg:col-span-4 flex items-center gap-3">
-                      <img
-                        src={design.previewFrontUrl}
-                        alt="Recto"
-                        className="w-20 h-24 object-contain bg-white border border-stone-200 rounded-xs p-1"
-                      />
-                      <img
-                        src={design.previewBackUrl}
-                        alt="Verso"
-                        className="w-20 h-24 object-contain bg-white border border-stone-200 rounded-xs p-1"
-                      />
+                      <div className="w-24 h-28 bg-white border border-stone-200 rounded-xs overflow-hidden shrink-0">
+                        <Card3DCanvas
+                          color={ord.color}
+                          size={(ord.size || 'L') as TShirtSize}
+                          activeSide="front"
+                          isVisible={true}
+                          elements={normalizedTo3DElements(design.elements)}
+                        />
+                      </div>
                       <div className="text-xs space-y-1">
                         <span className="font-bold block text-[#111111]">
                           Spécifications Imprimeur

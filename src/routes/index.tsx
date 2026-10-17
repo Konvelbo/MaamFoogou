@@ -89,20 +89,7 @@ function MaamfoogouBoutiqueApp() {
     return () => clearTimeout(timer)
   }, [state.lastToast])
 
-  // Requête publique getFeaturedDesigns(limit = 5) : Section 4 "Modèles à découvrir"
-  const featuredDesigns = useMemo(() => {
-    return state.designs
-      .filter((d) => d.status === 'published')
-      .slice()
-      .sort((a, b) => {
-        if (a.featured !== b.featured) return a.featured ? -1 : 1
-        if (b.likesCount !== a.likesCount) return b.likesCount - a.likesCount
-        return b.createdAt - a.createdAt
-      })
-      .slice(0, FEATURED_DESIGNS_LIMIT)
-  }, [state.designs])
-
-  // Catalogue complet filtré & trié
+  // Catalogue complet filtré & trié (Section 4 : Modèles à découvrir)
   const catalogDesigns = useMemo(() => {
     return state.designs
       .filter((d) => d.status === 'published')
@@ -600,7 +587,7 @@ function MaamfoogouBoutiqueApp() {
               </div>
             </div>
 
-            <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-6 space-y-12">
+            <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-6 space-y-6">
               {/* SECTION 4 : "MODÈLES À DÉCOUVRIR" (Max 5 cartes : grille 2x2 sur mobile, jusqu'à 5 sur desktop) */}
               <section aria-labelledby="featured-heading" className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -608,33 +595,14 @@ function MaamfoogouBoutiqueApp() {
                     id="featured-heading"
                     className="text-sm font-semibold text-[#111111] uppercase tracking-wider"
                   >
-                    Modèles à découvrir ({featuredDesigns.length})
+                    Modèles à découvrir ({Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)})
                   </h2>
                   <span className="text-xs text-[#666666]">
-                    Aperçu automatique Face • Dos • Couleurs
+                    Modèles 3D temps réel • Face • Dos • Couleurs
                   </span>
                 </div>
 
-                {/* Grille 2x2 sur mobile (les 4 premières cartes visibles sur mobile, 5 sur desktop lg:grid-cols-5) */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                  {featuredDesigns.map((design, idx) => (
-                    <div
-                      key={design.id}
-                      className={idx === 4 ? 'hidden lg:block' : ''}
-                    >
-                      <FeaturedDesignCard
-                        design={design}
-                        cardIndex={idx}
-                        isLikedByCurrentUser={likedDesignIds.has(design.id)}
-                        onSelectDesign={handleOpenProductDetail}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* BARRE D'OUTILS BZB ("X articles" | "Trier") + GRILLE CATALOGUE */}
-              <section aria-labelledby="catalog-heading" className="space-y-4">
+                {/* BARRE D'OUTILS BZB ("X articles" | "Trier") */}
                 <div className="flex items-center justify-between border-y border-[#E5E5E5] py-3 text-xs text-[#111111]">
                   <button
                     type="button"
@@ -649,7 +617,7 @@ function MaamfoogouBoutiqueApp() {
                   </button>
 
                   <span id="catalog-heading" className="text-[#666666]">
-                    {catalogDesigns.length} articles
+                    {Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)} modèles 3D affichés
                   </span>
 
                   <button
@@ -677,15 +645,20 @@ function MaamfoogouBoutiqueApp() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-                  {catalogDesigns.map((design, idx) => (
-                    <FeaturedDesignCard
+                {/* Grille 2x2 sur mobile (les 4 premières cartes visibles sur mobile, 5 sur desktop lg:grid-cols-5) */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                  {catalogDesigns.slice(0, FEATURED_DESIGNS_LIMIT).map((design, idx) => (
+                    <div
                       key={design.id}
-                      design={design}
-                      cardIndex={idx}
-                      isLikedByCurrentUser={likedDesignIds.has(design.id)}
-                      onSelectDesign={handleOpenProductDetail}
-                    />
+                      className={idx === 4 ? 'hidden lg:block' : ''}
+                    >
+                      <FeaturedDesignCard
+                        design={design}
+                        cardIndex={idx}
+                        isLikedByCurrentUser={likedDesignIds.has(design.id)}
+                        onSelectDesign={handleOpenProductDetail}
+                      />
+                    </div>
                   ))}
                 </div>
               </section>
