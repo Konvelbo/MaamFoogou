@@ -125,6 +125,39 @@ export const seedDatabase = mutation({
       createdAt: now - 86400000 * 12,
     })
 
+    // Membres actifs de la communauté Maamfoogou pour animer la boutique (likes & partages)
+    const communityMembers = [
+      { name: 'Kader Traoré', email: 'kader@fasodesign.bf', phone: '+226 70 12 34 56', city: 'Ouagadougou', district: 'Gounghin' },
+      { name: 'Fatimata Sawadogo', email: 'fatimata@fasodesign.bf', phone: '+226 78 90 12 34', city: 'Ouagadougou', district: 'Dassasgho' },
+      { name: 'Salif Compaoré', email: 'salif@fasodesign.bf', phone: '+226 71 23 45 67', city: 'Bobo-Dioulasso', district: 'Accart-Ville' },
+      { name: 'Wendkuni Yaméogo', email: 'wendkuni@fasodesign.bf', phone: '+226 75 67 89 01', city: 'Koudougou', district: 'Secteur 3' },
+      { name: 'Bintou Sanou', email: 'bintou@fasodesign.bf', phone: '+226 76 11 22 33', city: 'Bobo-Dioulasso', district: 'Colma' },
+      { name: 'Moussa Diallo', email: 'moussa@fasodesign.bf', phone: '+226 65 44 33 22', city: 'Ouagadougou', district: 'Tampouy' },
+      { name: 'Alizéta Kaboré', email: 'alizeta@fasodesign.bf', phone: '+226 70 99 88 77', city: 'Ouagadougou', district: 'Pissy' },
+      { name: 'Yacouba Koné', email: 'yacouba@fasodesign.bf', phone: '+226 74 55 66 77', city: 'Banfora', district: 'Tatana' },
+      { name: 'Rasmata Zoungrana', email: 'rasmata@fasodesign.bf', phone: '+226 72 33 44 55', city: 'Ouagadougou', district: '1200 Logements' },
+      { name: 'Souleymane Barry', email: 'souleymane@fasodesign.bf', phone: '+226 73 88 77 66', city: 'Dori', district: 'Secteur 1' },
+    ]
+
+    const communityUserIds: any[] = []
+    for (const m of communityMembers) {
+      const uId = await ctx.db.insert('users', {
+        name: m.name,
+        email: m.email,
+        passwordHash: creatorPassHash,
+        phone: m.phone,
+        geoCoordinates: {
+          city: m.city,
+          district: m.district,
+          landmark: 'Avenue commerciale',
+        },
+        role: 'user',
+        referralCode: `MFO-${m.name.slice(0, 3).toUpperCase()}`,
+        createdAt: now - 86400000 * 10,
+      })
+      communityUserIds.push(uId)
+    }
+
     // 3. Initialisation de la table stock dans Convex
     for (const c of CATALOG_COLORS) {
       for (const size of SIZES) {
@@ -564,7 +597,7 @@ export const seedDatabase = mutation({
     })
 
     // Modèle 8 : Typographie Architecturale Pure (Devant uniquement — Texte seul)
-    await ctx.db.insert('designs', {
+    const d8 = await ctx.db.insert('designs', {
       ownerId: adminId,
       creatorName: 'Atelier Maamfoogou',
       source: 'team',
@@ -577,7 +610,7 @@ export const seedDatabase = mutation({
       status: 'published',
       price: 11500,
       featured: true,
-      likesCount: 31,
+      likesCount: 5,
       commentsCount: 0,
       elements: [
         {
@@ -612,7 +645,55 @@ export const seedDatabase = mutation({
       createdAt: now - 3600000 * 8,
     })
 
-    // 5. Quelques commentaires réels en base Convex
+    // 5. Insertion de vrais Likes dans la table 'likes' de Convex
+    // Garantit que la table 'likes' contient de vrais documents associés aux utilisateurs
+    const likesMap: Array<{ designId: any; users: any[] }> = [
+      {
+        designId: d4, // AKATSUKI SHINOBI (Le plus liké — 12 likes)
+        users: [adminId, creatorAminataId, ...communityUserIds],
+      },
+      {
+        designId: d7, // 226 HIP-HOP (11 likes)
+        users: [creatorIdrissaId, adminId, ...communityUserIds.slice(0, 9)],
+      },
+      {
+        designId: d2, // PALM ANGELS (10 likes)
+        users: [adminId, creatorAminataId, ...communityUserIds.slice(1, 9)],
+      },
+      {
+        designId: d3, // GUCCI BLIND FOR LOVE (9 likes)
+        users: [creatorAminataId, creatorIdrissaId, ...communityUserIds.slice(2, 9)],
+      },
+      {
+        designId: d1, // CELINE TRIOMPHE (8 likes)
+        users: [adminId, ...communityUserIds.slice(0, 7)],
+      },
+      {
+        designId: d6, // PURE JOIE EMOJI (7 likes)
+        users: [creatorIdrissaId, ...communityUserIds.slice(3, 9)],
+      },
+      {
+        designId: d5, // GHOST RECON TACTIQUE (6 likes)
+        users: [creatorAminataId, ...communityUserIds.slice(0, 5)],
+      },
+      {
+        designId: d8, // MANIFESTE TYPO (5 likes)
+        users: [adminId, ...communityUserIds.slice(5, 9)],
+      },
+    ]
+
+    for (const item of likesMap) {
+      for (const uId of item.users) {
+        await ctx.db.insert('likes', {
+          userId: uId,
+          designId: item.designId,
+          createdAt: now - Math.floor(Math.random() * 86400000 * 6),
+        })
+      }
+      await ctx.db.patch(item.designId, { likesCount: item.users.length })
+    }
+
+    // 6. Quelques commentaires réels en base Convex
     await ctx.db.insert('comments', {
       designId: d1,
       userId: creatorAminataId,

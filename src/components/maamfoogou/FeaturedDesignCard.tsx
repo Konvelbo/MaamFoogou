@@ -131,7 +131,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
     }
   }, [prefersReducedMotion, isPaused, isVisible, slides.length, cardIndex])
 
-  const handleToggleLike = (e: React.MouseEvent) => {
+  const handleToggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation()
 
     const prevLiked = optimisticLiked
@@ -142,10 +142,13 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
     setOptimisticLikesCount(Math.max(0, prevCount + (nextLiked ? 1 : -1)))
 
     try {
-      const res = toggleDesignLike(design.id)
+      const res = await toggleDesignLike(design.id)
       if (res.requiresAuth) {
         setOptimisticLiked(prevLiked)
         setOptimisticLikesCount(prevCount)
+      } else {
+        setOptimisticLiked(res.liked)
+        setOptimisticLikesCount(res.likesCount)
       }
     } catch {
       setOptimisticLiked(prevLiked)
@@ -184,15 +187,25 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       }}
       className="group flex flex-col bg-white cursor-pointer select-none"
     >
-      {/* Modèle 3D permanent (Card3DCanvas) : aucun démontage au scroll et aucun SVG 2D affiché */}
+      {/* Modèle 3D permanent (Card3DCanvas) avec image de secours anti-disparition */}
       <div className="relative aspect-[3/4] w-full bg-[#F2F2F2] overflow-hidden rounded-none">
-        <Card3DCanvas
-          color={currentSlide.color}
-          size={(design.size as TShirtSize) || 'L'}
-          activeSide={currentSlide.side}
-          isVisible={isVisible}
-          elements={elements3D}
+        {/* Visuel de secours sous le canvas : garantit qu'un t-shirt est toujours visible à 100% */}
+        <img
+          src={currentSlide.side === 'back' ? design.previewBackUrl : design.previewFrontUrl}
+          alt={design.name}
+          className="absolute inset-0 w-full h-full object-contain p-3 pointer-events-none select-none opacity-80"
+          loading="lazy"
         />
+
+        <div className="relative z-10 w-full h-full">
+          <Card3DCanvas
+            color={currentSlide.color}
+            size={(design.size as TShirtSize) || 'L'}
+            activeSide={currentSlide.side}
+            isVisible={isVisible}
+            elements={elements3D}
+          />
+        </div>
 
         {/* Badges minimalistes BZB en haut à gauche (0px border-radius) */}
         <div className="pointer-events-none absolute top-2.5 left-2.5 flex flex-col items-start gap-1 z-10">

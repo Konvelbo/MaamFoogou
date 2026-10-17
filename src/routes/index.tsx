@@ -539,8 +539,12 @@ function MaamfoogouBoutiqueApp() {
                   {[
                     {
                       label: 'Modèles à découvrir',
-                      onClick: () => setSortBy('featured'),
-                      active: sortBy === 'featured',
+                      onClick: () => {
+                        setSourceFilter('all')
+                        setSearchQuery('')
+                        setSortBy('featured')
+                      },
+                      active: sortBy === 'featured' && sourceFilter === 'all' && !searchQuery.trim(),
                     },
                     {
                       label: 'Les plus likés',

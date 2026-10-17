@@ -304,7 +304,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
 
             <button
               type="button"
-              onClick={() => toggleDesignLike(design.id)}
+              onClick={async () => {
+                await toggleDesignLike(design.id)
+              }}
               className="inline-flex items-center gap-1.5 p-1.5 text-[#111111] hover:opacity-70 transition-opacity"
               title="Liker et sauvegarder dans Mes collections"
             >

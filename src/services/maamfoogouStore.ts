@@ -577,7 +577,7 @@ export function authenticateUser(params: {
       )
 
       if (pending && pending.type === 'like') {
-        toggleDesignLike(pending.designId)
+        await toggleDesignLike(pending.designId)
       }
 
       await syncFromConvex()
@@ -637,12 +637,12 @@ export function updateUserProfile(params: {
     })
 }
 
-export function toggleDesignLike(designId: string): {
+export async function toggleDesignLike(designId: string): Promise<{
   success: boolean
   liked: boolean
   likesCount: number
   requiresAuth?: boolean
-} {
+}> {
   if (!currentState.sessionToken) {
     openAuthForProtectedAction({ type: 'like', designId })
     return { success: false, liked: false, likesCount: 0, requiresAuth: true }
@@ -664,25 +664,23 @@ export function toggleDesignLike(designId: string): {
 
   updateState({ likes: nextLikes, designs: nextDesigns })
 
-  ;(convexClient as any)
-    .mutation('likes:toggleLike', {
+  try {
+    const res = await (convexClient as any).mutation('likes:toggleLike', {
       sessionToken: currentState.sessionToken,
       designId,
     })
-    .then((res: any) => {
-      showToast(
-        res.liked
-          ? 'Modèle sauvegardé dans Mes collections ("À acheter plus tard")'
-          : 'Modèle retiré de vos collections',
-        'info'
-      )
-    })
-    .catch((err: any) => {
-      syncFromConvex()
-      showToast(err.message || 'Erreur lors du like', 'error')
-    })
-
-  return { success: true, liked: nextLiked, likesCount: nextCount }
+    showToast(
+      res.liked
+        ? 'Modèle sauvegardé dans Mes collections ("À acheter plus tard")'
+        : 'Modèle retiré de vos collections',
+      'info'
+    )
+    return { success: true, liked: res.liked, likesCount: res.likesCount }
+  } catch (err: any) {
+    await syncFromConvex()
+    showToast(err.message || 'Erreur lors du like', 'error')
+    return { success: false, liked: hasLiked, likesCount: currentLikesCount }
+  }
 }
 
 export function addDesignComment(params: {
