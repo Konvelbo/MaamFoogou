@@ -13,9 +13,10 @@ import { generateTShirtSvgUrl } from '../utils/tshirtPreviewSvg'
 // Constante modifiable du nombre maximum de modèles dans "Modèles à découvrir" (Section 4)
 export const FEATURED_DESIGNS_LIMIT = 8
 
-const CONVEX_URL =
+export const DEFAULT_CONVEX_URL = 'https://careful-fly-771.convex.cloud'
+export const CONVEX_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CONVEX_URL) ||
-  'http://127.0.0.1:3210'
+  DEFAULT_CONVEX_URL
 
 export const convexClient = new ConvexHttpClient(CONVEX_URL)
 
@@ -208,6 +209,9 @@ export interface StoreDatabaseState {
   authModalOpen: boolean
   pendingAction: PendingProtectedAction | null
   lastToast: { id: number; text: string; tone: 'success' | 'info' | 'error' } | null
+  isSyncing: boolean
+  hasSynced: boolean
+  syncError: string | null
   users: Array<MaamfoogouUser>
   designs: Array<MaamfoogouDesign>
   likes: Array<{ userId: string; designId: string; createdAt: number }>
@@ -230,6 +234,9 @@ let currentState: StoreDatabaseState = {
   authModalOpen: false,
   pendingAction: null,
   lastToast: null,
+  isSyncing: false,
+  hasSynced: false,
+  syncError: null,
   users: [],
   designs: [],
   likes: [],
@@ -314,26 +321,69 @@ export async function fetchDesignById(designId: string): Promise<MaamfoogouDesig
   }
 }
 
-export async function syncFromConvex() {
-  try {
-    const rawDesigns = await (convexClient as any).query('designs:listCatalogDesigns', {})
-    const designs = (rawDesigns || []).map(mapConvexDesign)
+let activeSyncPromise: Promise<void> | null = null
 
-    const rawStock = await (convexClient as any).query('stock:getAvailableVariants', {})
-    const stock: Array<StockVariantRow> = (rawStock || []).map((s: any) => ({
-      id: String(s.id || s._id),
-      color: s.color,
-      colorName: s.colorName,
-      size: s.size,
-      quantity: s.quantity,
-      reserved: s.reserved,
-      lowThreshold: s.lowThreshold,
-      restockDate: s.restockDate,
-    }))
+export async function syncFromConvex(force = false): Promise<void> {
+  if (activeSyncPromise && !force) {
+    return activeSyncPromise
+  }
 
-    // Mettre à jour immédiatement les modèles et les stocks pour le catalogue
-    updateState({ designs, stock })
+  activeSyncPromise = (async () => {
+    updateState({ isSyncing: true, syncError: null })
 
+    const maxAttempts = 3
+    let attempt = 0
+    let lastError: any = null
+    let fetchedDesigns: Array<MaamfoogouDesign> = []
+    let fetchedStock: Array<StockVariantRow> = []
+
+    while (attempt < maxAttempts) {
+      attempt++
+      try {
+        const rawDesigns = await (convexClient as any).query('designs:listCatalogDesigns', {})
+        fetchedDesigns = (rawDesigns || []).map(mapConvexDesign)
+
+        const rawStock = await (convexClient as any).query('stock:getAvailableVariants', {})
+        fetchedStock = (rawStock || []).map((s: any) => ({
+          id: String(s.id || s._id),
+          color: s.color,
+          colorName: s.colorName,
+          size: s.size,
+          quantity: s.quantity,
+          reserved: s.reserved,
+          lowThreshold: s.lowThreshold,
+          restockDate: s.restockDate,
+        }))
+
+        // Succès de la requête critique catalogue et stocks
+        updateState({
+          designs: fetchedDesigns,
+          stock: fetchedStock,
+          hasSynced: true,
+          isSyncing: false,
+          syncError: null,
+        })
+        lastError = null
+        break
+      } catch (err: any) {
+        lastError = err
+        console.warn(`[MaamfoogouStore] Tentative ${attempt}/${maxAttempts} de synchronisation Convex échouée:`, err?.message || err)
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 800))
+        }
+      }
+    }
+
+    if (lastError) {
+      console.error('[MaamfoogouStore] Échec définitif synchronisation Convex:', lastError)
+      updateState({
+        isSyncing: false,
+        syncError: lastError?.message || 'Erreur réseau lors de la synchronisation Convex',
+      })
+      return
+    }
+
+    // Récupération de l'utilisateur connecté s'il y a un token de session actif
     let currentUser: MaamfoogouUser | null = null
     let orders: Array<MaamfoogouOrder> = []
     let userLikes: Array<{ userId: string; designId: string; createdAt: number }> = []
@@ -400,7 +450,7 @@ export async function syncFromConvex() {
           }
           currentState.sessionToken = null
         }
-      } catch (err) {
+      } catch {
         if (typeof sessionStorage !== 'undefined') {
           sessionStorage.removeItem(SESSION_TOKEN_KEY)
         }
@@ -410,7 +460,8 @@ export async function syncFromConvex() {
 
     // Récupération des commentaires des modèles
     const allComments: Array<MaamfoogouComment> = []
-    for (const d of designs.slice(0, 8)) {
+    const targetDesigns = fetchedDesigns.length > 0 ? fetchedDesigns : currentState.designs
+    for (const d of targetDesigns.slice(0, 8)) {
       try {
         const paginated = await (convexClient as any).query('comments:listComments', {
           designId: d.id,
@@ -444,15 +495,33 @@ export async function syncFromConvex() {
       orders,
       likes: userLikes,
       comments: allComments,
+      hasSynced: true,
+      isSyncing: false,
     })
-  } catch (err) {
-    console.error('Erreur synchronisation Convex:', err)
-  }
+  })().finally(() => {
+    activeSyncPromise = null
+  })
+
+  return activeSyncPromise
 }
 
-// Auto-démarrage client
+export function retrySyncFromConvex(): Promise<void> {
+  return syncFromConvex(true)
+}
+
+// Auto-démarrage client et réactivité réseau
 if (typeof window !== 'undefined') {
   syncFromConvex()
+
+  window.addEventListener('online', () => {
+    syncFromConvex(true)
+  })
+
+  window.addEventListener('focus', () => {
+    if (!currentState.hasSynced || currentState.designs.length === 0) {
+      syncFromConvex()
+    }
+  })
 }
 
 export function saveReferralCodeToBrowser(code: string) {

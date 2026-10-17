@@ -170,7 +170,7 @@ async function seedTarget(convexUrl) {
 }
 
 async function main() {
-  const targetUrl = process.argv[2] || process.env.VITE_CONVEX_URL || 'http://127.0.0.1:3210'
+  const targetUrl = process.argv[2] || process.env.VITE_CONVEX_URL || 'https://careful-fly-771.convex.cloud'
   await seedTarget(targetUrl)
 }
 

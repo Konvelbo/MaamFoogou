@@ -4,6 +4,7 @@ import {
   type MaamfoogouDesign,
   fetchDesignById,
   registerIncomingReferralRef,
+  syncFromConvex,
   useMaamfoogouStore,
 } from '../services/maamfoogouStore'
 import { ProductDetailView } from '../components/maamfoogou/ProductDetailView'
@@ -43,6 +44,10 @@ function ProduitDetailPage() {
       return
     }
 
+    if (!state.hasSynced && !state.isSyncing) {
+      syncFromConvex()
+    }
+
     setLoading(true)
     fetchDesignById(designId).then((fetched) => {
       if (!isCurrent) return
@@ -53,11 +58,11 @@ function ProduitDetailPage() {
     return () => {
       isCurrent = false
     }
-  }, [designId, state.designs])
+  }, [designId, state.designs, state.hasSynced, state.isSyncing])
 
   return (
     <StoreLayout activeNav="none">
-      {loading ? (
+      {loading || (state.isSyncing && !design) ? (
         <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-20 text-center space-y-4">
           <div className="w-8 h-8 border-2 border-[#111111] border-t-transparent rounded-none animate-spin mx-auto" />
           <p className="text-xs tracking-wider uppercase text-[#666666]">

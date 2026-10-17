@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   LogOut,
@@ -14,6 +14,7 @@ import {
   getUserXpSummary,
   logoutUser,
   openAuthForProtectedAction,
+  syncFromConvex,
   useMaamfoogouStore,
   type PendingProtectedAction,
 } from '../../services/maamfoogouStore'
@@ -43,6 +44,12 @@ export const StoreLayout: React.FC<StoreLayoutProps> = ({
   const state = useMaamfoogouStore()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!state.hasSynced && !state.isSyncing) {
+      syncFromConvex()
+    }
+  }, [state.hasSynced, state.isSyncing])
 
   const currentUser = state.users.find((u) => u.id === state.currentUserId)
   const xpSummary = currentUser ? getUserXpSummary(currentUser.id) : null

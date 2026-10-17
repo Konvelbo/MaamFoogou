@@ -21,6 +21,8 @@ import {
   logoutUser,
   openAuthForProtectedAction,
   registerIncomingReferralRef,
+  retrySyncFromConvex,
+  syncFromConvex,
   useMaamfoogouStore,
 } from '../services/maamfoogouStore'
 import { FeaturedDesignCard } from '../components/maamfoogou/FeaturedDesignCard'
@@ -96,6 +98,13 @@ function MaamfoogouBoutiqueApp() {
       }
     }
   }, [state.designs])
+
+  // Synchronisation Convex au montage de la boutique si non synchronisé
+  useEffect(() => {
+    if (!state.hasSynced && !state.isSyncing) {
+      syncFromConvex()
+    }
+  }, [state.hasSynced, state.isSyncing])
 
   // Fermeture automatique du toast après 4s
   useEffect(() => {
@@ -612,7 +621,7 @@ function MaamfoogouBoutiqueApp() {
                     id="featured-heading"
                     className="text-sm font-semibold text-[#111111] uppercase tracking-wider"
                   >
-                    Modèles à découvrir ({Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)})
+                    Modèles à découvrir {state.designs.length === 0 && (state.isSyncing || !state.hasSynced) ? '(chargement...)' : `(${Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)})`}
                   </h2>
                   <span className="text-xs text-[#666666]">
                     Modèles 3D temps réel • Face • Dos • Couleurs
@@ -634,7 +643,9 @@ function MaamfoogouBoutiqueApp() {
                   </button>
 
                   <span id="catalog-heading" className="text-[#666666]">
-                    {Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)} modèles 3D affichés
+                    {state.designs.length === 0 && (state.isSyncing || !state.hasSynced)
+                      ? 'Synchronisation des modèles 3D...'
+                      : `${Math.min(catalogDesigns.length, FEATURED_DESIGNS_LIMIT)} modèles 3D affichés`}
                   </span>
 
                   <button
@@ -662,22 +673,82 @@ function MaamfoogouBoutiqueApp() {
                   </button>
                 </div>
 
-                {/* Grille 2x2 sur mobile (les 4 premières cartes visibles sur mobile, 5 sur desktop lg:grid-cols-5) */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                  {catalogDesigns.slice(0, FEATURED_DESIGNS_LIMIT).map((design, idx) => (
-                    <div
-                      key={design.id}
-                      className={idx === 4 ? 'hidden lg:block' : ''}
-                    >
-                      <FeaturedDesignCard
-                        design={design}
-                        cardIndex={idx}
-                        isLikedByCurrentUser={likedDesignIds.has(design.id)}
-                        onSelectDesign={handleOpenProductDetail}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {/* Grille 2x2 sur mobile, jusqu'à 5 sur desktop avec Skeletons BZB et fallback d'erreur */}
+                {state.designs.length === 0 && (state.isSyncing || !state.hasSynced) ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 py-2">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`border border-[#E5E5E5] bg-white p-3 space-y-3 animate-pulse ${
+                          idx === 4 ? 'hidden lg:block' : ''
+                        }`}
+                      >
+                        <div className="aspect-[3/4] bg-[#F5F5F5] w-full" />
+                        <div className="space-y-2 pt-1">
+                          <div className="h-3 bg-[#E5E5E5] w-3/4" />
+                          <div className="h-2.5 bg-[#EEEEEE] w-1/2" />
+                          <div className="h-3.5 bg-[#E5E5E5] w-1/3 pt-1" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : catalogDesigns.length === 0 ? (
+                  <div className="border border-[#E5E5E5] bg-[#FAFAFA] p-8 text-center space-y-3 my-4">
+                    {state.syncError ? (
+                      <>
+                        <p className="text-xs font-semibold text-[#111111] uppercase tracking-wider">
+                          Synchronisation momentanément indisponible
+                        </p>
+                        <p className="text-[11px] text-[#666666] max-w-sm mx-auto">
+                          Impossible de synchroniser le catalogue avec Convex ({state.syncError}).
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => retrySyncFromConvex()}
+                          className="px-5 py-2.5 text-xs font-semibold uppercase tracking-wider bg-[#111111] text-white rounded-none hover:opacity-85 transition-opacity"
+                        >
+                          Réessayer la synchronisation
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xs font-semibold text-[#111111] uppercase tracking-wider">
+                          Aucun modèle ne correspond à vos filtres
+                        </p>
+                        <p className="text-[11px] text-[#666666]">
+                          Essayez de réinitialiser vos critères ou de modifier votre recherche.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSourceFilter('all')
+                            setSearchQuery('')
+                            setSortBy('featured')
+                          }}
+                          className="px-4 py-2 text-xs font-semibold uppercase tracking-wider border border-[#111111] bg-white text-[#111111] rounded-none hover:bg-[#111111] hover:text-white transition-colors"
+                        >
+                          Réinitialiser les filtres
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                    {catalogDesigns.slice(0, FEATURED_DESIGNS_LIMIT).map((design, idx) => (
+                      <div
+                        key={design.id}
+                        className={idx === 4 ? 'hidden lg:block' : ''}
+                      >
+                        <FeaturedDesignCard
+                          design={design}
+                          cardIndex={idx}
+                          isLikedByCurrentUser={likedDesignIds.has(design.id)}
+                          onSelectDesign={handleOpenProductDetail}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             </div>
           </div>

@@ -9,7 +9,9 @@ async function main() {
   if (!storeRes.ok) throw new Error('Storefront not responding!')
 
   // 2. Convex Backend direct connection
-  const convex = new ConvexHttpClient('http://127.0.0.1:3210')
+  const convex = new ConvexHttpClient(
+    process.env.VITE_CONVEX_URL || 'https://careful-fly-771.convex.cloud'
+  )
   const catalog = await convex.query('designs:listCatalogDesigns', {})
   console.log(`\n📦 2. Catalog designs from Convex DB: ${catalog.length} models found`)
 
@@ -69,7 +71,7 @@ async function main() {
   // 5. Security audit check: Passwords must be hashed
   const authTest = await convex.mutation('users:authenticate', {
     mode: 'login',
-    email: 'admin@maamfoogou.bf',
+    email: 'fiatechnologiecam@gmail.com',
     password: 'Admin3D!2026',
   })
   console.log(`\n🔒 5. Security test: Authentication token generated securely: ${authTest.token.slice(0, 20)}...`)
