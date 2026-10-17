@@ -89,6 +89,13 @@ function MaamfoogouBoutiqueApp() {
     return () => clearTimeout(timer)
   }, [state.lastToast])
 
+  // Remonter automatiquement en haut de page à chaque changement de vue
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [activePage, selectedDesignId])
+
   // Catalogue complet filtré & trié (Section 4 : Modèles à découvrir)
   const catalogDesigns = useMemo(() => {
     return state.designs
@@ -315,7 +322,7 @@ function MaamfoogouBoutiqueApp() {
           </div>
         </div>
 
-        {/* Ligne 2 : Barre de navigation principale centrée avec animation hover (comme FEMME | HOMME | NOUVELLE COLLECTION...) */}
+        {/* Ligne 2 : Barre de navigation principale centrée avec animation hover (style BZB monochrome) */}
         <nav className="hidden md:flex items-center justify-center gap-8 h-11 border-b border-[#E5E5E5] bg-white px-4">
           <button
             type="button"
@@ -327,7 +334,7 @@ function MaamfoogouBoutiqueApp() {
               activePage === 'home' && sourceFilter === 'all'
             )}
           >
-            ACCUEIL BOUTIQUE
+            TEE-SHIRTS
           </button>
 
           <button
@@ -350,8 +357,7 @@ function MaamfoogouBoutiqueApp() {
               setActivePage('home')
             }}
             className={navLinkUnderlineClass(
-              activePage === 'home' && sourceFilter === 'creator',
-              'text-[#E05A2B]'
+              activePage === 'home' && sourceFilter === 'creator'
             )}
           >
             CRÉATEURS DU FASO
@@ -363,12 +369,9 @@ function MaamfoogouBoutiqueApp() {
               setDesignToReloadIn3D(null)
               setActivePage('customize_3d')
             }}
-            className={navLinkUnderlineClass(
-              activePage === 'customize_3d',
-              'text-[#1D4ED8]'
-            )}
+            className={navLinkUnderlineClass(activePage === 'customize_3d')}
           >
-            PERSONNALISATION 3D
+            STUDIO 3D
           </button>
 
           <button
@@ -388,14 +391,6 @@ function MaamfoogouBoutiqueApp() {
           >
             PROFIL & XP
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActivePage('admin_stock')}
-            className={navLinkUnderlineClass(activePage === 'admin_stock')}
-          >
-            ADMIN (/ADMIN/STOCK)
-          </button>
         </nav>
 
         {/* Menu déroulant Mobile épuré */}
@@ -403,7 +398,7 @@ function MaamfoogouBoutiqueApp() {
           <div className="md:hidden border-b border-[#E5E5E5] bg-white px-4 py-3 space-y-2">
             {[
               {
-                label: 'ACCUEIL BOUTIQUE',
+                label: 'TEE-SHIRTS (ACCUEIL)',
                 action: () => {
                   setSourceFilter('all')
                   setActivePage('home')
@@ -424,7 +419,7 @@ function MaamfoogouBoutiqueApp() {
                 },
               },
               {
-                label: 'PERSONNALISATION 3D',
+                label: 'STUDIO 3D',
                 action: () => {
                   setDesignToReloadIn3D(null)
                   setActivePage('customize_3d')
@@ -438,10 +433,6 @@ function MaamfoogouBoutiqueApp() {
               {
                 label: 'PROFIL, NIVEAU XP & À PROPOS',
                 action: () => handleNavigateProtected('settings', '/settings'),
-              },
-              {
-                label: 'ADMIN (/ADMIN/STOCK)',
-                action: () => setActivePage('admin_stock'),
               },
             ].map((item) => (
               <button
@@ -460,9 +451,9 @@ function MaamfoogouBoutiqueApp() {
         )}
       </header>
 
-      {/* Notification Toast sobre (rounded-[4px]) */}
+      {/* Notification Toast sobre (0px border-radius) */}
       {state.lastToast && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-[#111111] text-white px-4 py-3 rounded-[4px] flex items-center justify-between gap-3 text-xs">
+        <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-[#111111] text-white px-4 py-3 rounded-none flex items-center justify-between gap-3 text-xs">
           <span>{state.lastToast.text}</span>
           <button
             type="button"
@@ -483,28 +474,28 @@ function MaamfoogouBoutiqueApp() {
       <main className="flex-1">
         {activePage === 'home' && (
           <div>
-            {/* En-tête de catégorie & sous-navigation inspirés de plp-desktop-1440x900.png */}
+            {/* En-tête de catégorie & sous-navigation inspirés de b-z-b.com/vetement-femme/tee-shirt/ */}
             <div className="border-b border-[#E5E5E5]">
               <div className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-5 pb-6 space-y-4">
                 {/* Fil d'ariane */}
                 <div className="text-xs text-[#666666] flex items-center gap-1.5">
+                  <span>Accueil</span>
+                  <span>/</span>
                   <span>Vêtements</span>
-                  <span>&gt;</span>
-                  <span>Burkina Faso & Sous-région</span>
-                  <span>&gt;</span>
+                  <span>/</span>
                   <span className="text-[#111111] font-medium">
-                    T-shirt personnalisable
+                    Tee-shirts personnalisables
                   </span>
                 </div>
 
-                <h1 className="text-base font-normal text-[#111111]">
-                  T-shirt personnalisable & Créateurs
+                <h1 className="text-lg sm:text-xl font-bold uppercase tracking-[0.06em] text-[#111111]">
+                  Tee-shirts personnalisables & Créateurs
                 </h1>
 
-                {/* Onglets horizontaux centrés avec barre bleue/noire animée au survol (comme T-shirt | Chemise & Blouse...) */}
-                <div className="flex items-center justify-start sm:justify-center gap-6 overflow-x-auto pt-1">
+                {/* Onglets horizontaux avec barre noire animée au survol */}
+                <div className="flex items-center justify-start sm:justify-center gap-6 overflow-x-auto pt-1 no-scrollbar">
                   {[
-                    { id: 'all', label: 'T-shirt (Tous)' },
+                    { id: 'all', label: 'Tous les tee-shirts' },
                     { id: 'team', label: 'Collection Équipe' },
                     { id: 'creator', label: 'Modèles Créateurs' },
                   ].map((tab) => {
@@ -516,11 +507,11 @@ function MaamfoogouBoutiqueApp() {
                         onClick={() =>
                           setSourceFilter(tab.id as 'all' | 'team' | 'creator')
                         }
-                        className={`relative pb-2 text-xs font-semibold whitespace-nowrap transition-colors duration-200 ${
+                        className={`relative pb-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors duration-200 ${
                           isActive
-                            ? 'text-[#1D4ED8]'
-                            : 'text-[#111111] hover:text-[#1D4ED8]'
-                        } after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[#1D4ED8] after:transition-all after:duration-200 ${
+                            ? 'text-[#111111]'
+                            : 'text-[#666666] hover:text-[#111111]'
+                        } after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[#111111] after:transition-all after:duration-200 ${
                           isActive
                             ? 'after:w-full'
                             : 'after:w-0 hover:after:w-full'
@@ -537,14 +528,14 @@ function MaamfoogouBoutiqueApp() {
                       setDesignToReloadIn3D(null)
                       setActivePage('customize_3d')
                     }}
-                    className="relative pb-2 text-xs font-semibold whitespace-nowrap text-[#111111] hover:text-[#1D4ED8] transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[#1D4ED8] after:w-0 hover:after:w-full after:transition-all after:duration-200"
+                    className="relative pb-2 text-xs font-semibold uppercase tracking-wider whitespace-nowrap text-[#666666] hover:text-[#111111] transition-colors duration-200 after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:bg-[#111111] after:w-0 hover:after:w-full after:transition-all after:duration-200"
                   >
                     Studio 3D sur-mesure
                   </button>
                 </div>
 
-                {/* Boutons sous-catégories encadrés (aucun rounded > 8px : rounded-[6px]) */}
-                <div className="flex items-center justify-start sm:justify-center gap-2.5 overflow-x-auto pt-1">
+                {/* Boutons sous-catégories encadrés à angles droits (0px border-radius, style BZB) */}
+                <div className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pt-1 no-scrollbar">
                   {[
                     {
                       label: 'Modèles à découvrir',
@@ -562,7 +553,7 @@ function MaamfoogouBoutiqueApp() {
                       active: sortBy === 'price_asc',
                     },
                     {
-                      label: 'Personnaliser un t-shirt',
+                      label: 'Créer dans le Studio 3D',
                       onClick: () => {
                         setDesignToReloadIn3D(null)
                         setActivePage('customize_3d')
@@ -574,10 +565,10 @@ function MaamfoogouBoutiqueApp() {
                       key={pill.label}
                       type="button"
                       onClick={pill.onClick}
-                      className={`px-4 py-1.5 text-xs rounded-[6px] border whitespace-nowrap transition-colors duration-200 ${
+                      className={`px-4 py-2 text-xs rounded-none border whitespace-nowrap transition-colors duration-200 ${
                         pill.active
-                          ? 'border-[#111111] bg-[#111111] text-white font-medium'
-                          : 'border-[#E5E5E5] bg-white text-[#111111] hover:border-[#111111]'
+                          ? 'border-[#111111] bg-[#111111] text-white font-semibold'
+                          : 'border-[#CCCCCC] bg-white text-[#111111] hover:border-[#111111]'
                       }`}
                     >
                       {pill.label}
@@ -752,13 +743,6 @@ function MaamfoogouBoutiqueApp() {
               className="hover:text-[#111111] transition-colors"
             >
               À propos de nous
-            </button>
-            <button
-              type="button"
-              onClick={() => setActivePage('admin_stock')}
-              className="hover:text-[#111111] transition-colors"
-            >
-              /admin/stock
             </button>
           </div>
         </div>

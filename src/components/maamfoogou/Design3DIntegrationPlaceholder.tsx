@@ -32,13 +32,14 @@ const DEFAULT_3D_ELEMENTS: Array<DesignElement> = [
     side: 'front',
     position: [0, 0.04, 0.14],
     rotation: 0,
-    scale: 0.18,
+    scale: 0.17,
     text: 'MAAMFOOGOU',
-    fontFamily: 'Impact, Haettenschweiler, sans-serif',
-    fontSize: 62,
+    fontFamily: '"Montserrat", sans-serif',
+    fontSize: 48,
     textColor: '#F4F4F0',
-    strokeColor: '#CA8A04',
-    strokeWidth: 2,
+    strokeColor: '#111111',
+    strokeWidth: 0,
+    locked: false,
   },
 ]
 
@@ -244,49 +245,49 @@ export const Design3DIntegrationPlaceholder: React.FC<
   }
 
   return (
-    <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-6 space-y-5">
-      {/* Barre supérieure du Studio 3D : Nom de la création + Sauvegarder dans Mes collections + Acheter */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E5E5E5] pb-4">
-        <div className="flex flex-wrap items-center gap-3 flex-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#111111]">
-            Studio 3D Temps Réel :
+    <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-5 space-y-5">
+      {/* Barre supérieure du Studio 3D : Nom de la création + Sauvegarder dans Mes collections + Commander */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E5E5] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
+          <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#111111]">
+            Studio 3D :
           </span>
           <input
             type="text"
             value={designName}
             onChange={(e) => setDesignName(e.target.value)}
             placeholder="Nom de votre modèle 3D"
-            className="h-9 px-3 text-xs border border-[#CCCCCC] rounded-[4px] text-[#111111] focus:outline-none focus:border-[#111111] min-w-[240px]"
+            className="h-9 px-3 text-xs border border-[#CCCCCC] rounded-none text-[#111111] focus:outline-none focus:border-[#111111] sm:min-w-[260px]"
           />
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2">
           <button
             type="button"
             disabled={isSaving}
             onClick={() => handlePersist3DDesign(false)}
-            className="h-9 px-4 border border-[#111111] bg-white hover:bg-[#F7F7F7] text-[#111111] text-xs font-medium rounded-[4px] flex items-center gap-2 transition-colors"
+            className="h-9 px-3.5 border border-[#111111] bg-white hover:bg-[#F5F5F5] text-[#111111] text-xs font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Sauvegarder dans Mes collections (+40 XP)</span>
+            <Save className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sauvegarder (+40 XP)</span>
           </button>
 
           <button
             type="button"
             disabled={isSaving}
             onClick={() => handlePersist3DDesign(true)}
-            className="h-9 px-4 bg-[#111111] hover:bg-[#333333] text-white text-xs font-medium rounded-[4px] flex items-center gap-2 transition-colors"
+            className="h-9 px-3.5 bg-[#111111] hover:bg-[#2A2A2A] text-white text-xs font-bold uppercase tracking-wider rounded-none flex items-center justify-center gap-1.5 transition-colors"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Commander ce t-shirt 3D</span>
+            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Acheter ce modèle</span>
           </button>
         </div>
       </div>
 
-      {/* Grille Studio 3D : Scène 3D interactive à gauche (avec bouton Figer le modèle) + ConfiguratorPanel à droite */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      {/* Grille Studio 3D : Scène 3D interactive à gauche + ConfiguratorPanel sobre à droite */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 items-start">
         {/* Colonne Gauche : Scène 3D WebGL (TShirtModel + plis coton + decals) */}
-        <div className="relative h-[460px] sm:h-[600px] lg:col-span-7 lg:h-[720px] [&>div]:!rounded-[6px]">
+        <div className="relative h-[400px] sm:h-[540px] lg:col-span-7 lg:h-[680px]">
           <SceneCanvas
             ref={sceneRef}
             color={color}
@@ -302,52 +303,54 @@ export const Design3DIntegrationPlaceholder: React.FC<
             onCommitHistory={handleCommitHistory}
           />
 
-          {/* Bandeau supérieur dans la scène 3D + Bouton "Figer le modèle" */}
-          <div className="pointer-events-none absolute left-4 right-4 top-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 rounded-[4px] border border-white/10 bg-zinc-900/80 px-3 py-1.5 text-xs text-zinc-200 backdrop-blur-md">
+          {/* Bandeau supérieur sobre dans la scène 3D + Bouton "Figer le modèle" */}
+          <div className="pointer-events-none absolute left-3 right-3 top-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 border border-[#CCCCCC] bg-white/95 px-2.5 py-1 text-[11px] text-[#111111]">
               <span
-                className="h-3 w-3 rounded-[2px] border border-white/30"
+                className="h-3 w-3 border border-[#CCCCCC]"
                 style={{ backgroundColor: color }}
               />
-              <span className="font-semibold">
-                Vue : {activeSide === 'front' ? 'Devant' : 'Dos'}
+              <span className="font-bold uppercase tracking-wider">
+                {activeSide === 'front' ? 'Face' : 'Dos'}
               </span>
-              <span className="text-zinc-500">•</span>
-              <span className="font-bold text-amber-400">Taille {size}</span>
+              <span className="text-[#999999]">•</span>
+              <span className="font-medium text-[#666666]">
+                Confection {size}
+              </span>
             </div>
 
             <button
               type="button"
               onClick={() => setIsModelFrozen((prev) => !prev)}
-              className={`pointer-events-auto inline-flex items-center gap-1.5 rounded-[4px] border px-3.5 py-1.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all ${
+              className={`pointer-events-auto inline-flex items-center gap-1.5 border px-3 py-1 text-[11px] font-bold uppercase tracking-wider transition-colors ${
                 isModelFrozen
-                  ? 'border-amber-400 bg-amber-500 text-zinc-950'
-                  : 'border-white/15 bg-zinc-900/85 text-zinc-200 hover:border-white/30 hover:text-white'
+                  ? 'border-[#111111] bg-[#111111] text-white'
+                  : 'border-[#CCCCCC] bg-white/95 text-[#111111] hover:border-[#111111]'
               }`}
             >
               {isModelFrozen ? (
                 <>
-                  <Lock className="h-3.5 w-3.5" />
-                  Modèle figé (déverrouiller)
+                  <Lock className="h-3 w-3" />
+                  <span>Modèle figé</span>
                 </>
               ) : (
                 <>
-                  <Unlock className="h-3.5 w-3.5 text-amber-400" />
-                  Figer le modèle pour éditer
+                  <Unlock className="h-3 w-3" />
+                  <span>Figer le modèle</span>
                 </>
               )}
             </button>
           </div>
 
-          <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[4px] border border-white/10 bg-zinc-900/75 px-3.5 py-1 text-[11px] text-zinc-300 backdrop-blur-md">
+          <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 max-w-[92%] truncate border border-[#CCCCCC] bg-white/90 px-3 py-1 text-[10px] uppercase tracking-wider text-[#666666]">
             {isModelFrozen
-              ? 'Modèle verrouillé • Glissez directement vos textes et images sur le tissu'
-              : 'Glissez un motif pour le déplacer sur le tissu • Pincez ou molette pour zoomer'}
+              ? 'Caméra figée • Glissez vos textes et images sur le t-shirt'
+              : 'Glissez un élément non verrouillé pour le déplacer sur le buste'}
           </div>
         </div>
 
         {/* Colonne Droite : Panneau complet d'édition 3D (ConfiguratorPanel) */}
-        <div className="lg:col-span-5 lg:h-[720px] [&>div]:!rounded-[6px]">
+        <div className="lg:col-span-5">
           <ConfiguratorPanel
             color={color}
             size={size}
@@ -380,3 +383,4 @@ export const Design3DIntegrationPlaceholder: React.FC<
     </div>
   )
 }
+

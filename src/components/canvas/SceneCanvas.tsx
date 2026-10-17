@@ -11,9 +11,11 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows, Environment, OrbitControls } from '@react-three/drei'
 import {
   Crosshair,
+  Lock,
   RotateCcw,
   RotateCw,
   Trash2,
+  Unlock,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
@@ -86,11 +88,11 @@ function CameraRig({
   const { camera, gl, scene } = useThree()
   const isTransitioning = useRef(false)
   const targetAzimuth = useRef(0)
-  const targetDistance = useRef(1.85)
+  const targetDistance = useRef(2.25)
 
   useEffect(() => {
     targetAzimuth.current = activeSide === 'front' ? 0 : Math.PI
-    targetDistance.current = THREE.MathUtils.clamp(1.85 / zoom, 1.15, 2.6)
+    targetDistance.current = THREE.MathUtils.clamp(2.25 / zoom, 1.25, 3.0)
     isTransitioning.current = true
   }, [activeSide, zoom, isFrozen])
 
@@ -135,14 +137,14 @@ function CameraRig({
         : new THREE.Vector3(0, 0, 0)
 
       // 1. Capture studio haute netteté de la vue Devant (+Z)
-      camera.position.set(0, 0, 1.82)
+      camera.position.set(0, 0, 2.25)
       camera.lookAt(0, 0, 0)
       camera.updateMatrixWorld()
       gl.render(scene, camera)
       const frontDataUrl = gl.domElement.toDataURL('image/png')
 
       // 2. Capture studio haute netteté de la vue Dos (-Z)
-      camera.position.set(0, 0, -1.82)
+      camera.position.set(0, 0, -2.25)
       camera.lookAt(0, 0, 0)
       camera.updateMatrixWorld()
       gl.render(scene, camera)
@@ -210,59 +212,100 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
       [elements, selectedElementId, activeSide]
     )
 
+    const isSelectedLocked = Boolean(selectedElement?.locked)
+
     return (
-      <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black shadow-2xl">
-        {/* Halo de studio photographique dynamique adapté à la teinte du t-shirt */}
+      <div className="relative h-full w-full overflow-hidden rounded-none border border-[#E5E5E5] bg-[#EAEAEA]">
+        {/* Cyclorama de studio photographique neutre et sobre */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-45 transition-all duration-700"
+          className="pointer-events-none absolute inset-0"
           style={{
-            background: `radial-gradient(circle at 50% 44%, ${color}66 0%, rgba(24,24,27,0.4) 52%, transparent 78%)`,
+            background:
+              'radial-gradient(circle at 50% 42%, #F8F8F8 0%, #EAEAEA 58%, #DCDCDC 100%)',
           }}
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
 
-        {/* Barre d'outils flottante d'édition rapide pour l'élément sélectionné */}
+        {/* Barre d'outils flottante d'édition rapide pour l'élément sélectionné (style sobre BZB, 0px border-radius) */}
         {selectedElement && !isCapturingPreview && (
-          <div className="absolute left-1/2 top-14 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/15 bg-zinc-900/90 px-3 py-1.5 text-white shadow-2xl backdrop-blur-xl sm:top-4">
-            <span className="mr-1.5 max-w-[90px] truncate text-[11px] font-semibold text-amber-400">
+          <div className="absolute left-1/2 top-14 z-20 flex -translate-x-1/2 items-center gap-0.5 rounded-none border border-[#111111] bg-white/95 px-2.5 py-1 text-[#111111] shadow-sm sm:top-3">
+            <span className="mr-1.5 max-w-[95px] truncate text-[11px] font-bold uppercase tracking-wider text-[#111111]">
               {selectedElement.type === 'image'
                 ? selectedElement.originalFileName || 'Image'
                 : selectedElement.text}
             </span>
+
+            {/* Bouton Verrouiller / Déverrouiller l'élément sur le modèle */}
             <button
               type="button"
+              title={
+                isSelectedLocked
+                  ? 'Déverrouiller cet élément pour le modifier'
+                  : 'Verrouiller cet élément sur le modèle'
+              }
+              onClick={() => {
+                onUpdateElement(selectedElement.id, {
+                  locked: !isSelectedLocked,
+                })
+                onCommitHistory()
+              }}
+              className={`rounded-none px-2 py-1 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-colors ${
+                isSelectedLocked
+                  ? 'bg-[#111111] text-white'
+                  : 'bg-[#F5F5F5] text-[#111111] hover:bg-[#E5E5E5]'
+              }`}
+            >
+              {isSelectedLocked ? (
+                <>
+                  <Lock className="h-3 w-3" />
+                  <span>Verrouillé</span>
+                </>
+              ) : (
+                <>
+                  <Unlock className="h-3 w-3" />
+                  <span>Libre</span>
+                </>
+              )}
+            </button>
+
+            <div className="mx-1 h-4 w-px bg-[#E5E5E5]" />
+
+            <button
+              type="button"
+              disabled={isSelectedLocked}
               title="Réduire la taille"
               onClick={() => {
                 onUpdateElement(selectedElement.id, {
                   scale: Math.max(
-                    0.06,
+                    0.08,
                     Number((selectedElement.scale - 0.015).toFixed(3))
                   ),
                 })
                 onCommitHistory()
               }}
-              className="rounded-full p-1.5 hover:bg-white/15 active:scale-95"
+              className="rounded-none p-1.5 hover:bg-[#F5F5F5] disabled:opacity-30"
             >
               <ZoomOut className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
+              disabled={isSelectedLocked}
               title="Agrandir la taille"
               onClick={() => {
                 onUpdateElement(selectedElement.id, {
                   scale: Math.min(
-                    0.3,
+                    0.48,
                     Number((selectedElement.scale + 0.015).toFixed(3))
                   ),
                 })
                 onCommitHistory()
               }}
-              className="rounded-full p-1.5 hover:bg-white/15 active:scale-95"
+              className="rounded-none p-1.5 hover:bg-[#F5F5F5] disabled:opacity-30"
             >
               <ZoomIn className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
+              disabled={isSelectedLocked}
               title="Pivoter -15°"
               onClick={() => {
                 onUpdateElement(selectedElement.id, {
@@ -270,12 +313,13 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
                 })
                 onCommitHistory()
               }}
-              className="rounded-full p-1.5 hover:bg-white/15 active:scale-95"
+              className="rounded-none p-1.5 hover:bg-[#F5F5F5] disabled:opacity-30"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
+              disabled={isSelectedLocked}
               title="Pivoter +15°"
               onClick={() => {
                 onUpdateElement(selectedElement.id, {
@@ -283,12 +327,13 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
                 })
                 onCommitHistory()
               }}
-              className="rounded-full p-1.5 hover:bg-white/15 active:scale-95"
+              className="rounded-none p-1.5 hover:bg-[#F5F5F5] disabled:opacity-30"
             >
               <RotateCw className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
+              disabled={isSelectedLocked}
               title="Recentrer sur le buste"
               onClick={() => {
                 onUpdateElement(selectedElement.id, {
@@ -301,16 +346,17 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
                 })
                 onCommitHistory()
               }}
-              className="rounded-full p-1.5 hover:bg-white/15 active:scale-95"
+              className="rounded-none p-1.5 hover:bg-[#F5F5F5] disabled:opacity-30"
             >
               <Crosshair className="h-3.5 w-3.5" />
             </button>
-            <div className="mx-0.5 h-4 w-px bg-white/15" />
+            <div className="mx-0.5 h-4 w-px bg-[#E5E5E5]" />
             <button
               type="button"
+              disabled={isSelectedLocked}
               title="Supprimer cet élément"
               onClick={() => onDeleteElement(selectedElement.id)}
-              className="rounded-full p-1.5 text-rose-400 hover:bg-rose-500/20 active:scale-95"
+              className="rounded-none p-1.5 text-red-700 hover:bg-red-50 disabled:opacity-30"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -320,21 +366,21 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
         <Canvas
           shadows
           dpr={[1, 2]}
-          camera={{ position: [0, 0, 1.85], fov: 25, near: 0.1, far: 20 }}
+          camera={{ position: [0, 0, 2.25], fov: 28, near: 0.1, far: 20 }}
           gl={{
             antialias: true,
             preserveDrawingBuffer: true,
             powerPreference: 'high-performance',
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.12,
+            toneMappingExposure: 1.1,
           }}
         >
           {/* Éclairage Studio symétrique (Devant & Dos) + HDRI */}
-          <ambientLight intensity={0.75} />
+          <ambientLight intensity={0.85} />
           <hemisphereLight
             color="#ffffff"
-            groundColor="#27272a"
-            intensity={0.65}
+            groundColor="#d4d4d4"
+            intensity={0.7}
           />
           {/* Key Light Avant (+Z) */}
           <directionalLight
@@ -404,8 +450,8 @@ export const SceneCanvas = forwardRef<SceneCanvasHandle, SceneCanvasProps>(
             rotateSpeed={0.75}
             zoomSpeed={0.85}
             enablePan={false}
-            minDistance={1.15}
-            maxDistance={2.6}
+            minDistance={1.25}
+            maxDistance={3.0}
             minPolarAngle={Math.PI / 3.2}
             maxPolarAngle={Math.PI - Math.PI / 3.2}
             target={[0, 0, 0]}

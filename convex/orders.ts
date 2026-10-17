@@ -35,10 +35,11 @@ export const createOrder = mutation({
     district: v.string(),
     landmark: v.string(),
     referralCode: v.optional(v.string()),
+    instantTestMode: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.sessionToken)
-    const qty = Math.max(1, Math.floor(args.quantity))
+    const qty = Math.max(1, Math.min(50, Math.floor(args.quantity)))
 
     const design = await ctx.db.get(args.designId)
     if (!design) {
@@ -72,21 +73,83 @@ export const createOrder = mutation({
       )
     }
 
-    // 2. Réservation atomique du stock : reserved += n
-    await ctx.db.patch(stockRow._id, {
-      reserved: stockRow.reserved + qty,
-    })
-
     const unitPrice = design.price ?? 10000 // Prix en FCFA
     const totalAmount = unitPrice * qty
 
-    // 3. Initialisation de la transaction auprès du prestataire Mobile Money abstrait
+    // 2. Initialisation de la transaction auprès du prestataire Mobile Money abstrait
     const paymentInit = activePaymentProvider.createPayment({
       orderId: `ord_${Date.now()}`,
       amountFcfa: totalAmount,
       customerPhone: args.phoneNumber,
       customerName: args.fullName,
       operator: args.operator as MobileMoneyOperator,
+    })
+
+    if (args.instantTestMode) {
+      // Mode Test 1-clic : décrémentation directe du stock et validation immédiate côté serveur
+      await ctx.db.patch(stockRow._id, {
+        quantity: Math.max(0, stockRow.quantity - qty),
+      })
+
+      const orderId = await ctx.db.insert('orders', {
+        userId: user._id,
+        designId: args.designId,
+        color: args.color,
+        size: args.size,
+        quantity: qty,
+        unitPrice,
+        totalAmount,
+        status: 'paid',
+        paymentProvider: args.operator,
+        paymentReference: paymentInit.paymentReference,
+        phoneNumber: sanitizeServerText(args.phoneNumber, 25),
+        deliveryInfo: {
+          fullName: sanitizeServerText(args.fullName, 60),
+          phone: sanitizeServerText(args.phoneNumber, 25),
+          city: sanitizeServerText(args.city, 50),
+          district: sanitizeServerText(args.district, 60),
+          landmark: sanitizeServerText(args.landmark, 120),
+        },
+        referralCodeUsed: args.referralCode,
+        createdAt: Date.now(),
+        paidAt: Date.now(),
+      })
+
+      const isCreatorModel =
+        design.source === 'creator' &&
+        String(design.ownerId) !== String(user._id)
+
+      await awardServerXp(
+        ctx,
+        user._id,
+        isCreatorModel
+          ? 'creator_design_purchased_buyer'
+          : 'custom_tshirt_purchased',
+        String(orderId)
+      )
+
+      if (isCreatorModel) {
+        await awardServerXp(
+          ctx,
+          design.ownerId,
+          'creator_design_purchased_creator',
+          String(orderId)
+        )
+      }
+
+      return {
+        orderId,
+        paymentReference: paymentInit.paymentReference,
+        ussdPromptCode: paymentInit.ussdPromptCode,
+        expiresInSeconds: paymentInit.expiresInSeconds,
+        totalAmount,
+        status: 'paid' as const,
+      }
+    }
+
+    // 3. Réservation atomique du stock : reserved += n
+    await ctx.db.patch(stockRow._id, {
+      reserved: stockRow.reserved + qty,
     })
 
     // 4. Création de la commande à l'état "pending"
@@ -148,7 +211,97 @@ export const createOrder = mutation({
       ussdPromptCode: paymentInit.ussdPromptCode,
       expiresInSeconds: paymentInit.expiresInSeconds,
       totalAmount,
+      status: 'pending' as const,
     }
+  },
+})
+
+/**
+ * Mutation de test Mobile Money : simule le retour du webhook FasoPay sur une commande en attente
+ */
+export const simulateTestWebhook = mutation({
+  args: {
+    sessionToken: v.string(),
+    paymentReference: v.string(),
+    outcome: v.union(
+      v.literal('SUCCESS'),
+      v.literal('FAILED'),
+      v.literal('EXPIRED')
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx, args.sessionToken)
+    const order = await ctx.db
+      .query('orders')
+      .withIndex('by_payment_reference', (q: any) =>
+        q.eq('paymentReference', args.paymentReference)
+      )
+      .first()
+
+    if (!order) {
+      return { processed: false, status: 'not_found' }
+    }
+    if (String(order.userId) !== String(user._id) && user.role !== 'admin') {
+      throw new Error('Action non autorisée sur cette commande.')
+    }
+    if (order.status !== 'pending') {
+      return { processed: false, status: order.status }
+    }
+
+    const stockRow = await ctx.db
+      .query('stock')
+      .withIndex('by_variant', (q: any) =>
+        q.eq('color', order.color).eq('size', order.size)
+      )
+      .first()
+
+    if (args.outcome === 'SUCCESS') {
+      if (stockRow) {
+        await ctx.db.patch(stockRow._id, {
+          quantity: Math.max(0, stockRow.quantity - order.quantity),
+          reserved: Math.max(0, stockRow.reserved - order.quantity),
+        })
+      }
+      await ctx.db.patch(order._id, {
+        status: 'paid',
+        paidAt: Date.now(),
+      })
+
+      const design = await ctx.db.get(order.designId)
+      const isCreatorModel =
+        design &&
+        design.source === 'creator' &&
+        String(design.ownerId) !== String(order.userId)
+
+      await awardServerXp(
+        ctx,
+        order.userId,
+        isCreatorModel
+          ? 'creator_design_purchased_buyer'
+          : 'custom_tshirt_purchased',
+        String(order._id)
+      )
+
+      if (isCreatorModel && design) {
+        await awardServerXp(
+          ctx,
+          design.ownerId,
+          'creator_design_purchased_creator',
+          String(order._id)
+        )
+      }
+
+      return { processed: true, status: 'paid' }
+    }
+
+    const nextStatus = args.outcome === 'EXPIRED' ? 'expired' : 'failed'
+    if (stockRow) {
+      await ctx.db.patch(stockRow._id, {
+        reserved: Math.max(0, stockRow.reserved - order.quantity),
+      })
+    }
+    await ctx.db.patch(order._id, { status: nextStatus })
+    return { processed: true, status: nextStatus }
   },
 })
 
@@ -393,7 +546,7 @@ export const listMyOrders = query({
 
     return await Promise.all(
       rows.map(async (o: any) => {
-        const design = await ctx.db.get(o.designId)
+        const design: any = await ctx.db.get(o.designId)
         return {
           ...o,
           id: o._id,
@@ -415,7 +568,7 @@ export const listAllOrdersAdmin = query({
     const rows = await ctx.db.query('orders').order('desc').collect()
     return await Promise.all(
       rows.map(async (o: any) => {
-        const design = await ctx.db.get(o.designId)
+        const design: any = await ctx.db.get(o.designId)
         return {
           ...o,
           id: o._id,

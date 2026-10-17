@@ -42,13 +42,13 @@ export const AdminStockAndModerationView: React.FC = () => {
   if (!currentUser || currentUser.role !== 'admin') {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center space-y-4">
-        <div className="w-14 h-14 rounded-[3px] bg-red-50 border border-red-200 flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-7 h-7 text-red-600" />
+        <div className="w-14 h-14 rounded-none bg-[#F5F5F5] border border-[#E5E5E5] flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-7 h-7 text-[#111111]" />
         </div>
-        <h1 className="text-xl font-extrabold uppercase tracking-tight text-[#111111]">
+        <h1 className="text-xl font-bold uppercase tracking-tight text-[#111111]">
           Accès réservé aux administrateurs (/admin/stock)
         </h1>
-        <p className="text-sm text-stone-600">
+        <p className="text-xs text-[#666666]">
           Conformément aux principes de sécurité Maamfoogou, toutes les
           mutations d’administration vérifient l’identité et le rôle{' '}
           <code>role === "admin"</code> côté serveur.
@@ -62,9 +62,9 @@ export const AdminStockAndModerationView: React.FC = () => {
               password: 'Admin2026!',
             })
           }
-          className="px-6 py-3 bg-[#111111] hover:bg-stone-800 text-white text-xs font-extrabold uppercase tracking-widest rounded-xs inline-flex items-center gap-2"
+          className="px-6 py-3 bg-[#111111] hover:bg-[#333333] text-white text-xs font-semibold uppercase tracking-[0.08em] rounded-none inline-flex items-center gap-2 transition-colors"
         >
-          <ShieldCheck className="w-4 h-4 text-[#D97706]" />
+          <ShieldCheck className="w-4 h-4 text-white" />
           Basculer sur le compte Admin Démo (Aminata)
         </button>
       </div>
@@ -92,15 +92,15 @@ export const AdminStockAndModerationView: React.FC = () => {
   ).length
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* En-tête Administration */}
-      <div className="bg-[#111111] text-white rounded-md p-6 flex flex-wrap items-center justify-between gap-4">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 space-y-8">
+      {/* En-tête Administration BZB sobre */}
+      <div className="bg-[#111111] text-white rounded-none p-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-widest text-[#D97706] flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#BDBDBD] flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" />
             Administration Maamfoogou • Connecté : {currentUser.name} (admin)
           </span>
-          <h1 className="text-xl sm:text-2xl font-extrabold uppercase tracking-tight mt-1">
+          <h1 className="text-lg sm:text-xl font-bold uppercase tracking-[0.04em] mt-1">
             Gestion des Stocks, Modération & Production Imprimeur
           </h1>
         </div>
@@ -109,10 +109,10 @@ export const AdminStockAndModerationView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('stock')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xs transition-colors ${
+            className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-none transition-colors ${
               activeSubTab === 'stock'
-                ? 'bg-[#D97706] text-[#111111]'
-                : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                ? 'bg-white text-[#111111]'
+                : 'bg-[#222222] text-[#CCCCCC] hover:bg-[#333333]'
             }`}
           >
             /admin/stock ({lowStockRows.length} alertes)
@@ -121,10 +121,10 @@ export const AdminStockAndModerationView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('moderation')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xs transition-colors ${
+            className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-none transition-colors ${
               activeSubTab === 'moderation'
-                ? 'bg-[#D97706] text-[#111111]'
-                : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                ? 'bg-white text-[#111111]'
+                : 'bg-[#222222] text-[#CCCCCC] hover:bg-[#333333]'
             }`}
           >
             Modération Avis ({reportedOrHiddenComments.length})
@@ -133,10 +133,10 @@ export const AdminStockAndModerationView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveSubTab('production')}
-            className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xs transition-colors ${
+            className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] rounded-none transition-colors ${
               activeSubTab === 'production'
-                ? 'bg-[#D97706] text-[#111111]'
-                : 'bg-stone-800 text-stone-300 hover:bg-stone-700'
+                ? 'bg-white text-[#111111]'
+                : 'bg-[#222222] text-[#CCCCCC] hover:bg-[#333333]'
             }`}
           >
             Commandes & Fiches Imprimeur ({state.orders.length})
@@ -150,10 +150,10 @@ export const AdminStockAndModerationView: React.FC = () => {
       {activeSubTab === 'stock' && (
         <div className="space-y-6">
           {/* 1. Alertes de stock faible en haut de page (getLowStock) */}
-          <div className="bg-amber-50 border border-amber-300 rounded-md p-5 space-y-3">
+          <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-none p-5 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-extrabold uppercase tracking-wider text-amber-950 flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-[#D97706]" />
+              <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#111111] flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#111111]" />
                 Alertes de stock faible & ruptures ({lowStockRows.length}{' '}
                 variante(s) sous le seuil)
               </h2>
@@ -161,9 +161,9 @@ export const AdminStockAndModerationView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => runExpirationCronNow(true)}
-                className="px-3 py-1.5 bg-[#111111] text-white text-[11px] font-bold uppercase rounded-xs flex items-center gap-1.5 hover:bg-stone-800"
+                className="px-3 py-1.5 bg-[#111111] text-white text-[11px] font-semibold uppercase tracking-wider rounded-none flex items-center gap-1.5 hover:bg-[#333333]"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-[#D97706]" />
+                <RefreshCw className="w-3.5 h-3.5 text-white" />
                 Exécuter Cron Expiration 15 min ({pendingOrdersCount} pending)
               </button>
             </div>
@@ -174,10 +174,10 @@ export const AdminStockAndModerationView: React.FC = () => {
                 return (
                   <div
                     key={row.id}
-                    className={`p-3 rounded-xs border text-xs flex items-center justify-between ${
+                    className={`p-3 rounded-none border text-xs flex items-center justify-between ${
                       avail === 0
-                        ? 'bg-red-100/80 border-red-300 text-red-950'
-                        : 'bg-white border-amber-300 text-amber-950'
+                        ? 'bg-[#FFF5F5] border-[#D32F2F] text-[#D32F2F]'
+                        : 'bg-white border-[#111111] text-[#111111]'
                     }`}
                   >
                     <div>
@@ -198,7 +198,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                           addedQuantity: 15,
                         })
                       }
-                      className="px-2.5 py-1 bg-[#111111] text-white text-[10px] font-bold uppercase rounded-xs shrink-0"
+                      className="px-2.5 py-1 bg-[#111111] text-white text-[10px] font-semibold uppercase rounded-none shrink-0"
                     >
                       +15 stock
                     </button>
@@ -209,10 +209,10 @@ export const AdminStockAndModerationView: React.FC = () => {
           </div>
 
           {/* 2. Filtre par couleur & Tableau complet des variantes */}
-          <div className="bg-white border border-stone-200 rounded-md p-5 space-y-4">
+          <div className="bg-white border border-[#E5E5E5] rounded-none p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-extrabold uppercase tracking-wider text-[#111111] flex items-center gap-2">
-                <Package className="w-5 h-5 text-[#D97706]" />
+              <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#111111] flex items-center gap-2">
+                <Package className="w-4 h-4 text-[#111111]" />
                 Inventaire par Couleur & Taille (updateStock vs addStock)
               </h2>
 
@@ -220,10 +220,10 @@ export const AdminStockAndModerationView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setFilterColor('ALL')}
-                  className={`px-3 py-1 text-xs font-bold uppercase rounded-xs border ${
+                  className={`px-3 py-1 text-xs font-medium uppercase rounded-none border ${
                     filterColor === 'ALL'
                       ? 'bg-[#111111] text-white border-[#111111]'
-                      : 'bg-white text-stone-700 border-stone-300'
+                      : 'bg-white text-[#666666] border-[#CCCCCC]'
                   }`}
                 >
                   Toutes les couleurs
@@ -237,14 +237,14 @@ export const AdminStockAndModerationView: React.FC = () => {
                     key={hex}
                     type="button"
                     onClick={() => setFilterColor(hex)}
-                    className={`px-3 py-1 text-xs font-bold rounded-xs border flex items-center gap-1.5 ${
+                    className={`px-3 py-1 text-xs font-medium rounded-none border flex items-center gap-1.5 ${
                       filterColor === hex
                         ? 'bg-[#111111] text-white border-[#111111]'
-                        : 'bg-white text-stone-700 border-stone-300'
+                        : 'bg-white text-[#666666] border-[#CCCCCC]'
                     }`}
                   >
                     <span
-                      className="w-3 h-3 rounded-[3px] border border-stone-400"
+                      className="w-3 h-3 rounded-none border border-[#999999]"
                       style={{ backgroundColor: hex }}
                     />
                     {name}
@@ -256,7 +256,7 @@ export const AdminStockAndModerationView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-stone-200 bg-stone-50 text-[11px] font-bold uppercase text-stone-600">
+                  <tr className="border-b border-[#E5E5E5] bg-[#FAFAFA] text-[11px] font-semibold uppercase text-[#666666]">
                     <th className="py-3 px-3">Variante</th>
                     <th className="py-3 px-3">Physique (quantity)</th>
                     <th className="py-3 px-3">Réservé (reserved)</th>
@@ -266,7 +266,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                     <th className="py-3 px-3">Rupture & Date</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-stone-200">
+                <tbody className="divide-y divide-[#E5E5E5]">
                   {filteredStock.map((row) => {
                     const available = Math.max(0, row.quantity - row.reserved)
                     const addVal = addAmounts[row.id] ?? 10
@@ -275,11 +275,11 @@ export const AdminStockAndModerationView: React.FC = () => {
                       restockDates[row.id] ?? row.restockDate ?? '25/11/2026'
 
                     return (
-                      <tr key={row.id} className="hover:bg-stone-50/80">
-                        <td className="py-3 px-3 font-bold text-[#111111]">
+                      <tr key={row.id} className="hover:bg-[#FAFAFA]">
+                        <td className="py-3 px-3 font-semibold text-[#111111]">
                           <div className="flex items-center gap-2">
                             <span
-                              className="w-4 h-4 rounded-[3px] border border-stone-300 shrink-0"
+                              className="w-4 h-4 rounded-none border border-[#CCCCCC] shrink-0"
                               style={{ backgroundColor: row.color }}
                             />
                             <span>
@@ -294,22 +294,22 @@ export const AdminStockAndModerationView: React.FC = () => {
 
                         <td className="py-3 px-3 font-mono">
                           {row.reserved > 0 ? (
-                            <span className="px-2 py-0.5 bg-amber-100 text-amber-900 font-bold rounded-xs">
+                            <span className="px-2 py-0.5 bg-[#F2F2F2] text-[#111111] font-semibold rounded-none">
                               {row.reserved} en cours
                             </span>
                           ) : (
-                            <span className="text-stone-400">0</span>
+                            <span className="text-[#999999]">0</span>
                           )}
                         </td>
 
                         <td className="py-3 px-3">
                           <span
-                            className={`px-2 py-0.5 font-bold rounded-xs ${
+                            className={`px-2 py-0.5 font-semibold rounded-none border ${
                               available === 0
-                                ? 'bg-red-100 text-red-800'
+                                ? 'bg-[#FFF5F5] border-[#D32F2F] text-[#D32F2F]'
                                 : available <= row.lowThreshold
-                                  ? 'bg-amber-100 text-amber-900'
-                                  : 'bg-emerald-100 text-emerald-800'
+                                  ? 'bg-[#FAFAFA] border-[#111111] text-[#111111]'
+                                  : 'bg-white border-[#E5E5E5] text-[#111111]'
                             }`}
                           >
                             {available} dispo
@@ -329,7 +329,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                   [row.id]: Number(e.target.value),
                                 }))
                               }
-                              className="w-14 px-2 py-1 border border-stone-300 rounded-xs font-mono text-xs"
+                              className="w-14 px-2 py-1 border border-[#CCCCCC] rounded-none font-mono text-xs"
                             />
                             <button
                               type="button"
@@ -340,7 +340,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                   addedQuantity: addVal,
                                 })
                               }
-                              className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-xs flex items-center gap-1"
+                              className="px-2.5 py-1 bg-[#111111] hover:bg-[#333333] text-white font-medium rounded-none flex items-center gap-1"
                             >
                               <PlusCircle className="w-3 h-3" />
                               Ajouter
@@ -361,7 +361,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                   [row.id]: Number(e.target.value),
                                 }))
                               }
-                              className="w-16 px-2 py-1 border border-stone-300 rounded-xs font-mono text-xs"
+                              className="w-16 px-2 py-1 border border-[#CCCCCC] rounded-none font-mono text-xs"
                             />
                             <button
                               type="button"
@@ -373,7 +373,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                   restockDate: row.restockDate,
                                 })
                               }
-                              className="px-2.5 py-1 bg-[#111111] hover:bg-stone-800 text-white font-bold rounded-xs"
+                              className="px-2.5 py-1 border border-[#111111] text-[#111111] hover:bg-[#F5F5F5] font-medium rounded-none"
                             >
                               Fixer
                             </button>
@@ -393,7 +393,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                 }))
                               }
                               placeholder="JJ/MM/AAAA"
-                              className="w-24 px-2 py-1 border border-stone-300 rounded-xs text-[11px]"
+                              className="w-24 px-2 py-1 border border-[#CCCCCC] rounded-none text-[11px]"
                             />
                             <button
                               type="button"
@@ -405,7 +405,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                                   restockDate: restockVal,
                                 })
                               }
-                              className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xs whitespace-nowrap"
+                              className="px-2.5 py-1 border border-[#D32F2F] text-[#D32F2F] hover:bg-[#FFF5F5] font-medium rounded-none whitespace-nowrap"
                             >
                               Marquer en rupture
                             </button>
@@ -425,15 +425,15 @@ export const AdminStockAndModerationView: React.FC = () => {
           ONGLET 2 : MODÉRATION DES COMMENTAIRES SIGNALÉS (Section 6)
          ===================================================================== */}
       {activeSubTab === 'moderation' && (
-        <div className="bg-white border border-stone-200 rounded-md p-6 space-y-4">
-          <h2 className="text-base font-extrabold uppercase tracking-wider text-[#111111]">
+        <div className="bg-white border border-[#E5E5E5] rounded-none p-6 space-y-4">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-[#111111]">
             Modération des commentaires signalés ou masqués
           </h2>
 
           {state.comments.length === 0 ? (
-            <p className="text-sm text-stone-500">Aucun commentaire.</p>
+            <p className="text-xs text-[#666666]">Aucun commentaire.</p>
           ) : (
-            <div className="divide-y divide-stone-200">
+            <div className="divide-y divide-[#E5E5E5]">
               {state.comments.map((c) => {
                 const design = state.designs.find((d) => d.id === c.designId)
                 return (
@@ -441,9 +441,9 @@ export const AdminStockAndModerationView: React.FC = () => {
                     key={c.id}
                     className={`py-4 flex flex-wrap items-center justify-between gap-4 ${
                       c.status === 'reported'
-                        ? 'bg-amber-50/70 px-3 rounded-xs'
+                        ? 'bg-[#FAFAFA] px-3 rounded-none'
                         : c.status === 'hidden'
-                          ? 'bg-red-50/50 px-3 rounded-xs opacity-70'
+                          ? 'bg-[#FFF5F5] px-3 rounded-none opacity-70'
                           : ''
                     }`}
                   >
@@ -452,23 +452,23 @@ export const AdminStockAndModerationView: React.FC = () => {
                         <span className="font-bold text-[#111111]">
                           {c.authorName} (Niv. {c.authorLevel})
                         </span>
-                        <span className="text-stone-400">•</span>
-                        <span className="text-stone-600">
+                        <span className="text-[#999999]">•</span>
+                        <span className="text-[#666666]">
                           Modèle : <strong>{design?.name || c.designId}</strong>
                         </span>
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-xs ${
+                          className={`px-2 py-0.5 text-[10px] font-semibold uppercase rounded-none border ${
                             c.status === 'reported'
-                              ? 'bg-amber-200 text-amber-900'
+                              ? 'border-[#111111] bg-white text-[#111111]'
                               : c.status === 'hidden'
-                                ? 'bg-red-200 text-red-900'
-                                : 'bg-emerald-100 text-emerald-800'
+                                ? 'border-[#D32F2F] bg-white text-[#D32F2F]'
+                                : 'border-[#E5E5E5] bg-[#FAFAFA] text-[#666666]'
                           }`}
                         >
                           {c.status}
                         </span>
                       </div>
-                      <p className="text-sm text-stone-800">{c.text}</p>
+                      <p className="text-xs text-[#222222]">{c.text}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -476,7 +476,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => moderateDesignComment(c.id, 'visible')}
-                          className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-bold rounded-xs flex items-center gap-1"
+                          className="px-3 py-1.5 bg-[#111111] text-white text-xs font-medium rounded-none flex items-center gap-1"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           Rendre visible
@@ -486,7 +486,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => moderateDesignComment(c.id, 'hidden')}
-                          className="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-xs flex items-center gap-1"
+                          className="px-3 py-1.5 border border-[#D32F2F] text-[#D32F2F] text-xs font-medium rounded-none flex items-center gap-1"
                         >
                           <EyeOff className="w-3.5 h-3.5" />
                           Masquer (hideComment)
@@ -511,18 +511,18 @@ export const AdminStockAndModerationView: React.FC = () => {
             return (
               <div
                 key={ord.id}
-                className="bg-white border border-stone-200 rounded-md p-5 space-y-4"
+                className="bg-white border border-[#E5E5E5] rounded-none p-5 space-y-4"
               >
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5E5] pb-3">
                   <div>
-                    <span className="text-xs font-mono text-stone-500">
+                    <span className="text-xs font-mono text-[#666666]">
                       Commande #{ord.id} • Réf Paiement :{' '}
                       {ord.paymentReference}
                     </span>
-                    <h3 className="text-base font-extrabold uppercase text-[#111111]">
+                    <h3 className="text-sm font-bold uppercase text-[#111111]">
                       {ord.designName} — Taille {ord.size} × {ord.quantity}
                     </h3>
-                    <p className="text-xs text-stone-600">
+                    <p className="text-xs text-[#666666]">
                       Client : <strong>{ord.deliveryInfo.fullName}</strong> (
                       {ord.deliveryInfo.phone}) — {ord.deliveryInfo.city},{' '}
                       {ord.deliveryInfo.district} ({ord.deliveryInfo.landmark})
@@ -531,12 +531,12 @@ export const AdminStockAndModerationView: React.FC = () => {
 
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-3 py-1 text-xs font-extrabold uppercase rounded-xs ${
+                      className={`px-3 py-1 text-xs font-semibold uppercase rounded-none border ${
                         ord.status === 'paid'
-                          ? 'bg-emerald-100 text-emerald-900'
+                          ? 'bg-[#111111] text-white border-[#111111]'
                           : ord.status === 'pending'
-                            ? 'bg-amber-100 text-amber-900'
-                            : 'bg-red-100 text-red-900'
+                            ? 'bg-[#FAFAFA] text-[#111111] border-[#111111]'
+                            : 'bg-[#FFF5F5] text-[#D32F2F] border-[#D32F2F]'
                       }`}
                     >
                       {ord.status.toUpperCase()} —{' '}
@@ -552,7 +552,7 @@ export const AdminStockAndModerationView: React.FC = () => {
                             'SUCCESS'
                           )
                         }
-                        className="px-3 py-1.5 bg-emerald-700 text-white text-xs font-bold rounded-xs"
+                        className="px-3 py-1.5 bg-[#111111] text-white text-xs font-medium rounded-none"
                       >
                         Simuler Webhook SUCCESS
                       </button>
@@ -562,9 +562,9 @@ export const AdminStockAndModerationView: React.FC = () => {
 
                 {/* Fiche de production imprimeur (Section 7 : coordonnées 0..1, aperçus Face/Dos, exports printFront/printBack) */}
                 {design && (
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-stone-50 p-4 rounded-sm border border-stone-200">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 bg-[#FAFAFA] p-4 rounded-none border border-[#E5E5E5]">
                     <div className="lg:col-span-4 flex items-center gap-3">
-                      <div className="w-24 h-28 bg-white border border-stone-200 rounded-xs overflow-hidden shrink-0">
+                      <div className="w-24 h-28 bg-white border border-[#E5E5E5] rounded-none overflow-hidden shrink-0">
                         <Card3DCanvas
                           color={ord.color}
                           size={(ord.size || 'L') as TShirtSize}
@@ -577,16 +577,16 @@ export const AdminStockAndModerationView: React.FC = () => {
                         <span className="font-bold block text-[#111111]">
                           Spécifications Imprimeur
                         </span>
-                        <span className="block text-stone-600">
+                        <span className="block text-[#666666]">
                           Couleur Hex : <code>{ord.color}</code>
                         </span>
-                        <span className="block text-stone-600">
+                        <span className="block text-[#666666]">
                           Taille : <strong>{ord.size}</strong>
                         </span>
                         <a
                           href={design.printFrontUrl || design.previewFrontUrl}
                           download={`print_recto_${ord.id}.svg`}
-                          className="inline-flex items-center gap-1 text-[#D97706] font-bold hover:underline"
+                          className="inline-flex items-center gap-1 text-[#111111] font-semibold underline"
                         >
                           <FileDown className="w-3.5 h-3.5" />
                           Export plat Recto/Verso
@@ -595,15 +595,15 @@ export const AdminStockAndModerationView: React.FC = () => {
                     </div>
 
                     <div className="lg:col-span-8">
-                      <span className="text-[11px] font-bold uppercase text-stone-600 flex items-center gap-1 mb-1">
-                        <Layers className="w-3.5 h-3.5 text-[#D97706]" />
+                      <span className="text-[11px] font-semibold uppercase text-[#666666] flex items-center gap-1 mb-1">
+                        <Layers className="w-3.5 h-3.5 text-[#111111]" />
                         Éléments à imprimer (Coordonnées normalisées 0 à 1) :
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {design.elements.map((el) => (
                           <div
                             key={el.id}
-                            className="p-2 bg-white border border-stone-200 rounded-xs text-[11px] font-mono"
+                            className="p-2 bg-white border border-[#E5E5E5] rounded-none text-[11px] font-mono"
                           >
                             <strong>[{el.side.toUpperCase()}]</strong>{' '}
                             {el.type.toUpperCase()} « {el.text || 'Image'} » •

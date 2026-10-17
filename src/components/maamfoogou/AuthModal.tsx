@@ -17,6 +17,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('+226 70 ')
   const [city, setCity] = useState('Ouagadougou')
@@ -35,7 +36,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
       case 'save_design':
         return 'Connectez-vous pour sauvegarder votre création 3D.'
       case 'buy_now':
-        return 'Connectez-vous pour finaliser votre commande Mobile Money.'
+        return 'Connectez-vous pour finaliser votre commande.'
       case 'open_route':
         return 'Connectez-vous pour accéder à votre espace personnel.'
     }
@@ -46,6 +47,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (mode === 'register') {
+      if (password.length < 4) {
+        setError('Le mot de passe doit contenir au moins 4 caractères.')
+        return
+      }
+      if (password !== confirmPassword) {
+        setError(
+          'Les mots de passe ne correspondent pas. Veuillez vérifier la confirmation du mot de passe.'
+        )
+        return
+      }
+    }
 
     const result = authenticateUser({
       mode,
@@ -80,36 +94,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
-      <div className="relative w-full max-w-[460px] space-y-4 my-8">
-        {/* Bloc principal inspiré exactement de la page Login BZB (fond blanc, bordure fine #E5E5E5, rounded-[6px]) */}
-        <div className="relative bg-white border border-[#E5E5E5] rounded-[6px] p-6 sm:p-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+      <div className="relative w-full max-w-[460px] space-y-3 my-8">
+        {/* Bloc principal style BZB strict (fond blanc, bordure fine #E5E5E5, 0px border-radius) */}
+        <div className="relative bg-white border border-[#111111] rounded-none p-6 sm:p-8">
           <button
             type="button"
             onClick={closeAuthModal}
-            className="absolute top-4 right-4 p-1.5 text-[#666666] hover:text-[#111111] rounded-[4px] transition-colors"
+            className="absolute top-4 right-4 p-1.5 text-[#666666] hover:text-[#111111] rounded-none transition-colors"
             aria-label="Fermer"
           >
             <X className="w-4 h-4" />
           </button>
 
           <div className="text-center space-y-1.5 mb-6">
-            <h2 className="text-lg sm:text-xl font-bold text-[#111111]">
-              Connexion ou création de compte
+            <h2 className="text-base sm:text-lg font-bold uppercase tracking-[0.08em] text-[#111111]">
+              {mode === 'login' ? 'Connexion' : 'Création de compte'}
             </h2>
             <p className="text-xs text-[#666666]">
-              Accédez à vos avantages, vos collections et votre suivi de commande
+              Accédez à vos collections, votre Studio 3D et vos avantages XP
             </p>
           </div>
 
           {pendingBanner && (
-            <div className="mb-4 p-3 bg-[#F7F7F7] border border-[#E5E5E5] rounded-[4px] text-xs text-[#111111]">
+            <div className="mb-4 p-3 bg-[#F5F5F5] border border-[#E5E5E5] rounded-none text-xs text-[#111111]">
               {pendingBanner}
             </div>
           )}
 
           {storedRef && (
-            <div className="mb-4 p-2.5 bg-[#F7F7F7] border border-[#E5E5E5] rounded-[4px] text-xs text-[#111111] text-center">
+            <div className="mb-4 p-2.5 bg-[#F5F5F5] border border-[#E5E5E5] rounded-none text-xs text-[#111111] text-center">
               Code parrainage actif :{' '}
               <strong className="font-mono">{storedRef}</strong>
             </div>
@@ -123,9 +137,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                 setMode('login')
                 setError(null)
               }}
-              className={`flex-1 pb-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] ${
+              className={`flex-1 pb-2.5 text-xs uppercase tracking-wider transition-colors border-b-2 -mb-[1px] ${
                 mode === 'login'
-                  ? 'border-[#111111] text-[#111111] font-semibold'
+                  ? 'border-[#111111] text-[#111111] font-bold'
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
@@ -137,9 +151,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                 setMode('register')
                 setError(null)
               }}
-              className={`flex-1 pb-2.5 text-xs font-medium transition-colors border-b-2 -mb-[1px] ${
+              className={`flex-1 pb-2.5 text-xs uppercase tracking-wider transition-colors border-b-2 -mb-[1px] ${
                 mode === 'register'
-                  ? 'border-[#111111] text-[#111111] font-semibold'
+                  ? 'border-[#111111] text-[#111111] font-bold'
                   : 'border-transparent text-[#666666] hover:text-[#111111]'
               }`}
             >
@@ -148,7 +162,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[4px]">
+            <div
+              role="alert"
+              className="mb-4 p-3 bg-red-50 border border-red-300 text-red-800 text-xs rounded-none"
+            >
               {error}
             </div>
           )}
@@ -164,7 +181,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Nom complet"
-                    className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                    className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
                   />
                 </div>
 
@@ -177,7 +194,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+226 70 12 34 56"
-                      className="w-full h-10 pl-8 pr-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                      className="w-full h-10 pl-8 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
                     />
                   </div>
                   <div className="relative">
@@ -188,7 +205,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="Ville (Ouaga, Bobo...)"
-                      className="w-full h-10 pl-8 pr-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                      className="w-full h-10 pl-8 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
                     />
                   </div>
                 </div>
@@ -199,7 +216,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Quartier / Secteur de livraison"
-                  className="w-full h-10 px-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                  className="w-full h-10 px-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
                 />
               </>
             )}
@@ -212,7 +229,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Adresse e-mail"
-                className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
               />
             </div>
 
@@ -224,27 +241,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mot de passe"
-                className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-[4px] focus:outline-none focus:border-[#111111]"
+                className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
               />
             </div>
 
+            {mode === 'register' && (
+              <div className="relative">
+                <Lock className="w-4 h-4 text-[#757575] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmer le mot de passe"
+                  aria-label="Confirmer le mot de passe"
+                  className="w-full h-10 pl-9 pr-3 text-xs border border-[#CCCCCC] rounded-none focus:outline-none focus:border-[#111111]"
+                />
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full h-10 bg-[#111111] hover:bg-[#333333] text-white text-xs font-medium rounded-[4px] transition-colors"
+              className="w-full h-11 bg-[#111111] hover:bg-[#2A2A2A] text-white text-xs font-bold uppercase tracking-wider rounded-none transition-colors"
             >
-              {mode === 'login' ? 'Suivant' : 'Créer mon compte (+50 XP)'}
+              {mode === 'login' ? 'Se connecter' : 'Créer mon compte (+50 XP)'}
             </button>
           </form>
 
           <p className="mt-3 text-center text-[11px] text-[#757575]">
-            Saisissez votre e-mail, votre action en cours reprendra automatiquement
+            Votre action en cours reprendra automatiquement après connexion
           </p>
         </div>
 
-        {/* Second bloc BZB "Ou continuer avec" (rounded-[6px]) */}
-        <div className="bg-white border border-[#E5E5E5] rounded-[6px] p-5 text-center space-y-3">
-          <p className="text-xs font-medium text-[#111111]">
-            Ou continuer avec un compte démo
+        {/* Second bloc BZB "Ou continuer avec" (0px border-radius) */}
+        <div className="bg-white border border-[#E5E5E5] rounded-none p-5 text-center space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#111111]">
+            Accès rapide — Comptes de démonstration
           </p>
           <div className="grid grid-cols-2 gap-2.5">
             <button
@@ -252,7 +284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
               onClick={() =>
                 handleQuickDemoLogin('kader@maamfoogou.bf', 'Kader2026!')
               }
-              className="py-2 px-3 text-xs border border-[#CCCCCC] hover:border-[#111111] rounded-[4px] text-[#111111] transition-colors"
+              className="py-2.5 px-3 text-xs font-medium border border-[#CCCCCC] hover:border-[#111111] hover:bg-[#111111] hover:text-white rounded-none text-[#111111] transition-colors"
             >
               Kader (Client/Créateur)
             </button>
@@ -261,7 +293,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
               onClick={() =>
                 handleQuickDemoLogin('admin@maamfoogou.bf', 'Admin2026!')
               }
-              className="py-2 px-3 text-xs border border-[#CCCCCC] hover:border-[#111111] rounded-[4px] text-[#111111] transition-colors"
+              className="py-2.5 px-3 text-xs font-medium border border-[#CCCCCC] hover:border-[#111111] hover:bg-[#111111] hover:text-white rounded-none text-[#111111] transition-colors"
             >
               Aminata (Admin)
             </button>
@@ -271,3 +303,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onActionResumed }) => {
     </div>
   )
 }
+

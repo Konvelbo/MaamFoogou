@@ -19,9 +19,88 @@ export function sanitizeServerText(raw: string, maxLength = 500): string {
   return raw
     .replace(/<[^>]*>?/gm, '')
     .replace(/javascript:/gi, '')
+    .replace(/vbscript:/gi, '')
+    .replace(/data:text\/html/gi, '')
     .replace(/on\w+=/gi, '')
     .trim()
     .slice(0, maxLength)
+}
+
+/**
+ * Valide une URL côté serveur (interdit javascript:, vbscript:, data:text/html)
+ */
+export function sanitizeSafeUrl(raw?: string): string | undefined {
+  if (!raw) return undefined
+  const trimmed = raw.trim()
+  if (!trimmed) return undefined
+  const lower = trimmed.toLowerCase()
+  if (
+    lower.startsWith('javascript:') ||
+    lower.startsWith('vbscript:') ||
+    lower.startsWith('data:text/html')
+  ) {
+    throw new Error('URL non sécurisée refusée par le serveur.')
+  }
+  if (
+    lower.startsWith('https://') ||
+    lower.startsWith('http://') ||
+    lower.startsWith('/') ||
+    lower.startsWith('data:image/')
+  ) {
+    return trimmed.slice(0, 2048)
+  }
+  throw new Error('Protocole URL non autorisé.')
+}
+
+/**
+ * Génère un jeton aléatoire cryptographiquement sûr (CSPRNG Web Crypto)
+ */
+export function generateSecureToken(prefix = 'mf_sess', byteLength = 24): string {
+  const bytes = new Uint8Array(byteLength)
+  crypto.getRandomValues(bytes)
+  const hex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  return `${prefix}_${hex}`
+}
+
+/**
+ * Hache un mot de passe avec SHA-256 et un sel aléatoire unique (Web Crypto API)
+ */
+export async function hashPassword(
+  password: string,
+  existingSalt?: string
+): Promise<string> {
+  const salt = existingSalt || generateSecureToken('salt', 12)
+  const encoder = new TextEncoder()
+  const data = encoder.encode(`${salt}:${password}:maamfoogou_pepper_v1`)
+  const digest = await crypto.subtle.digest('SHA-256', data)
+  const hashHex = Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+  return `sha256$${salt}$${hashHex}`
+}
+
+/**
+ * Vérifie un mot de passe en temps constant contre son empreinte salée
+ */
+export async function verifyPassword(
+  password: string,
+  storedHash: string
+): Promise<boolean> {
+  if (!storedHash.startsWith('sha256$')) {
+    return false
+  }
+  const parts = storedHash.split('$')
+  if (parts.length !== 3) return false
+  const salt = parts[1]
+  const expectedCandidate = await hashPassword(password, salt)
+  if (expectedCandidate.length !== storedHash.length) return false
+  let diff = 0
+  for (let i = 0; i < storedHash.length; i++) {
+    diff |= expectedCandidate.charCodeAt(i) ^ storedHash.charCodeAt(i)
+  }
+  return diff === 0
 }
 
 /**

@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
-import { Center, Decal, useGLTF } from '@react-three/drei'
-import { DRACO_DECODER_PATH, TSHIRT_MODEL_PATH } from '../../config/constants'
+import { Decal, useGLTF } from '@react-three/drei'
+import { TSHIRT_MODEL_PATH } from '../../config/constants'
 import {
   createTextDecalTexture,
   getCottonNormalMap,
@@ -11,15 +11,7 @@ import {
 import { createRealisticTShirtGeometry } from '../../utils/tshirtGeometry'
 import type { DesignElement, TShirtSide, TShirtSize } from '../../types/configurator'
 
-// Échelle subtile selon la taille choisie (XS à XXL)
-const SIZE_SCALE_MAP: Record<TShirtSize, [number, number, number]> = {
-  XS: [0.94, 0.95, 0.94],
-  S: [0.97, 0.98, 0.97],
-  M: [1.0, 1.0, 1.0],
-  L: [1.03, 1.02, 1.03],
-  XL: [1.06, 1.04, 1.06],
-  XXL: [1.09, 1.06, 1.09],
-}
+// La taille (XS à XXL) est enregistrée uniquement en base de données (aucun impact sur l'échelle 3D du modèle)
 
 interface DecalLayerProps {
   element: DesignElement
@@ -106,11 +98,13 @@ function TShirtDecalItem({
     <Decal
       position={decalPosition}
       rotation={decalRotation}
-      scale={[width, height, 0.28]}
+      scale={[width, height, 0.32]}
       onPointerDown={(e) => {
         e.stopPropagation()
         onSelect(element.id)
-        onStartDrag(element.id)
+        if (!element.locked) {
+          onStartDrag(element.id)
+        }
       }}
     >
       <meshStandardMaterial
@@ -127,9 +121,9 @@ function TShirtDecalItem({
         roughness={0.85}
         metalness={0.0}
         emissive={
-          isSelected ? new THREE.Color('#f59e0b') : new THREE.Color('#000000')
+          isSelected ? new THREE.Color('#111111') : new THREE.Color('#000000')
         }
-        emissiveIntensity={isSelected ? 0.12 : 0}
+        emissiveIntensity={isSelected ? 0.08 : 0}
       />
     </Decal>
   )
@@ -141,7 +135,7 @@ interface TShirtCoreMeshProps {
   color: string
   size: TShirtSize
   activeSide: TShirtSide
-   isFrozen?: boolean
+  isFrozen?: boolean
   elements: Array<DesignElement>
   selectedElementId: string | null
   isCapturingPreview: boolean
@@ -153,15 +147,15 @@ interface TShirtCoreMeshProps {
 
 /**
  * Maillage principal du t-shirt :
+ * - Recentre géométriquement les sommets (geom.center()) pour que X=0 soit le centre exact du buste
  * - Désactive l'aoMap défectueuse du fichier GLB (qui contenait une tache noire au dos)
  * - Conserve la normalMap photographique du coton tissé et les vrais plis géométriques 3D
- * - Permet de figer totalement le modèle (isFrozen) pour faciliter le placement précis des éléments
+ * - La modification de la taille (XS-XXL) n'altère pas le maillage 3D (enregistrée uniquement en backend)
  */
 function TShirtCoreMesh({
   geometry,
   bakedMaterial,
   color,
-  size,
   activeSide,
   isFrozen = false,
   elements,
@@ -181,6 +175,7 @@ function TShirtCoreMesh({
 
   const preparedGeometry = useMemo(() => {
     const geom = geometry.clone()
+    geom.center()
     geom.computeVertexNormals()
     return geom
   }, [geometry])
@@ -205,12 +200,12 @@ function TShirtCoreMesh({
     return mat
   }, [bakedMaterial, fallbackNormalMap, fallbackRoughnessMap])
 
-  // Variables d'animation spring (entrée, couleur, taille)
+  // Variables d'animation spring (entrée et couleur, échelle fixe 1.0 indépendante de la taille)
   const entranceProgress = useRef(0)
   const entranceVelocity = useRef(0)
   const currentColor = useRef(new THREE.Color(color))
   const targetColor = useMemo(() => new THREE.Color(color), [color])
-  const currentScale = useRef(new THREE.Vector3(0.78, 0.78, 0.78))
+  const currentScale = useRef(new THREE.Vector3(0.92, 0.92, 0.92))
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05)
@@ -219,7 +214,7 @@ function TShirtCoreMesh({
     }
     const t = elapsedRef.current
 
-    // 1. Animation d'entrée fluide sans rebond excessif (amortissement critique)
+    // 1. Animation d'entrée fluide sans rebond excessif
     const stiffness = 95
     const damping = 18
     const force = (1 - entranceProgress.current) * stiffness
@@ -233,14 +228,9 @@ function TShirtCoreMesh({
     currentColor.current.lerp(targetColor, 1 - Math.exp(-12 * dt))
     cottonMaterial.color.copy(currentColor.current)
 
-    // 3. Transition spring de l'échelle selon la taille (XS à XXL)
-    const [sx, sy, sz] = SIZE_SCALE_MAP[size]
-    const entryScale = THREE.MathUtils.lerp(0.82, 1.0, entranceProgress.current)
-    const targetScaleVec = new THREE.Vector3(
-      sx * entryScale,
-      sy * entryScale,
-      sz * entryScale
-    )
+    // 3. Échelle constante 1.0 (la taille XS-XXL n'a aucun impact sur le modèle 3D)
+    const entryScale = THREE.MathUtils.lerp(0.92, 1.0, entranceProgress.current)
+    const targetScaleVec = new THREE.Vector3(entryScale, entryScale, entryScale)
     currentScale.current.lerp(targetScaleVec, 1 - Math.exp(-10 * dt))
 
     if (groupRef.current) {
@@ -306,33 +296,31 @@ function TShirtCoreMesh({
 
   return (
     <group ref={groupRef}>
-      <Center>
-        <mesh
-          ref={meshRef}
-          geometry={preparedGeometry}
-          material={cottonMaterial}
-          castShadow
-          receiveShadow
-          dispose={null}
-          onPointerMove={handlePointerMoveOnShirt}
-          onPointerDown={(e) => {
-            if (e.object === meshRef.current && !draggingId) {
-              onSelectElement(null)
-            }
-          }}
-        >
-          {elements.map((el) => (
-            <TShirtDecalItem
-              key={el.id}
-              element={el}
-              isSelected={el.id === selectedElementId}
-              fabricNormalMap={cottonMaterial.normalMap}
-              onSelect={(id) => onSelectElement(id)}
-              onStartDrag={(id) => setDraggingId(id)}
-            />
-          ))}
-        </mesh>
-      </Center>
+      <mesh
+        ref={meshRef}
+        geometry={preparedGeometry}
+        material={cottonMaterial}
+        castShadow
+        receiveShadow
+        dispose={null}
+        onPointerMove={handlePointerMoveOnShirt}
+        onPointerDown={(e) => {
+          if (e.object === meshRef.current && !draggingId) {
+            onSelectElement(null)
+          }
+        }}
+      >
+        {elements.map((el) => (
+          <TShirtDecalItem
+            key={el.id}
+            element={el}
+            isSelected={el.id === selectedElementId}
+            fabricNormalMap={cottonMaterial.normalMap}
+            onSelect={(id) => onSelectElement(id)}
+            onStartDrag={(id) => setDraggingId(id)}
+          />
+        ))}
+      </mesh>
     </group>
   )
 }
@@ -342,7 +330,7 @@ function GLTFTShirtLoader(
     modelPath: string
   }
 ) {
-  const gltf = useGLTF(props.modelPath, DRACO_DECODER_PATH) as unknown as {
+  const gltf = useGLTF(props.modelPath, false) as unknown as {
     nodes: Record<string, THREE.Mesh>
     materials: Record<string, THREE.MeshStandardMaterial>
     scene: THREE.Group
@@ -396,6 +384,10 @@ class ModelErrorBoundary extends React.Component<
     return { hasError: true }
   }
 
+  componentDidCatch(error: unknown) {
+    console.error('[TShirtModel] GLTF load error:', error)
+  }
+
   render() {
     if (this.state.hasError) {
       return this.props.fallback
@@ -440,4 +432,6 @@ export function TShirtModel({
   )
 }
 
-useGLTF.preload(TSHIRT_MODEL_PATH, DRACO_DECODER_PATH)
+if (typeof window !== 'undefined') {
+  useGLTF.preload(TSHIRT_MODEL_PATH, false)
+}

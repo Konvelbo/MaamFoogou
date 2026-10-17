@@ -191,7 +191,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
     }
   }
 
-  const handleCreateOrder = (e: React.FormEvent) => {
+  const handleCreateOrder = (
+    e: React.FormEvent,
+    instantTestMode = true
+  ) => {
     e.preventDefault()
     setOrderError(null)
 
@@ -206,6 +209,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       city,
       district,
       landmark,
+      instantTestMode,
     })
 
     if (!result.success) {
@@ -217,7 +221,9 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
       setActiveOrderRef(result.order.paymentReference)
       setShowCheckoutForm(false)
       setWebhookLog(
-        `Commande #${result.order.id.slice(-5)} en attente (${result.order.paymentReference}) — ${result.order.quantity} unité(s) réservée(s) 15 min.`
+        instantTestMode
+          ? `Paiement Mode Test validé instantanément ! Commande #${result.order.id.slice(-5)} (${result.order.paymentReference}) confirmée et transmise à l'atelier.`
+          : `Commande #${result.order.id.slice(-5)} en attente (${result.order.paymentReference}) — ${result.order.quantity} unité(s) réservée(s) 15 min.`
       )
     }
   }
@@ -328,14 +334,14 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
               color={selectedColor}
               size={(selectedSize as TShirtSize) || 'L'}
               activeSide={activeSide3D}
-              zoom={1.08}
+              zoom={1.0}
               isFrozen={false}
               elements={elements3D}
               selectedElementId={null}
             />
 
             <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">
-              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#0F5132] text-white rounded-[4px]">
+              <span className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] bg-[#111111] text-white rounded-none">
                 {design.source === 'team'
                   ? 'COLLECTION 3D FASO'
                   : `CRÉATEUR : ${design.creatorName}`}
@@ -348,7 +354,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 onClick={() =>
                   setActiveSide3D((s) => (s === 'front' ? 'back' : 'front'))
                 }
-                className="px-3 py-1.5 bg-white/90 hover:bg-white text-[#111111] text-xs font-medium rounded-[4px] flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 bg-white/95 hover:bg-white text-[#111111] border border-[#E5E5E5] text-xs font-medium rounded-none flex items-center gap-1.5 transition-colors"
               >
                 <FlipHorizontal className="w-3.5 h-3.5" />
                 <span>
@@ -563,7 +569,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
             )}
           </div>
 
-          {/* Boutons d'action épurés (rounded-[4px]) */}
+          {/* Boutons d'action BZB à angles droits (0px border-radius) */}
           <div className="space-y-2.5 pt-2">
             <button
               type="button"
@@ -578,41 +584,43 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 }
                 setShowCheckoutForm((prev) => !prev)
               }}
-              className={`w-full h-11 px-4 rounded-[4px] text-xs font-medium transition-colors ${
+              className={`w-full h-12 px-4 rounded-none text-xs font-bold uppercase tracking-wider transition-colors ${
                 canPurchase
-                  ? 'bg-[#111111] text-white hover:bg-[#333333]'
+                  ? 'bg-[#111111] text-white hover:bg-[#2A2A2A]'
                   : 'bg-[#E5E5E5] text-[#888888] cursor-not-allowed'
               }`}
             >
               {canPurchase
-                ? `Acheter avec Mobile Money — ${(design.price * quantity).toLocaleString('fr-FR')} FCFA`
-                : 'Indisponible'}
+                ? `Commander (Mode Test) — ${(design.price * quantity).toLocaleString('fr-FR')} FCFA`
+                : 'Rupture de stock'}
             </button>
 
             <button
               type="button"
               onClick={() => onOpenCustomizerWithDesign(design)}
-              className="w-full h-11 px-4 rounded-[4px] border border-[#111111] bg-white hover:bg-[#F7F7F7] text-[#111111] text-xs font-medium transition-colors"
+              className="w-full h-11 px-4 rounded-none border border-[#111111] bg-white hover:bg-[#F5F5F5] text-[#111111] text-xs font-bold uppercase tracking-wider transition-colors"
             >
-              Personnaliser ce modèle en 3D
+              Personnaliser ce modèle dans le Studio 3D
             </button>
           </div>
 
-          {/* Formulaire Mobile Money (rounded-[4px]) */}
+          {/* Formulaire Paiement Mode Test (0px border-radius) */}
           {showCheckoutForm && canPurchase && (
             <form
-              onSubmit={handleCreateOrder}
-              className="p-4 rounded-[4px] bg-[#F7F7F7] border border-[#E5E5E5] space-y-3"
+              onSubmit={(e) => handleCreateOrder(e, true)}
+              className="p-5 rounded-none bg-[#FAFAFA] border border-[#111111] space-y-3.5"
             >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-[#111111]">
-                  Paiement Mobile Money (Burkina Faso)
+              <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2.5 text-xs">
+                <span className="font-bold uppercase tracking-wider text-[#111111]">
+                  Paiement Mode Test — Mobile Money
                 </span>
-                <span className="text-[#666666]">Réservation 15 min</span>
+                <span className="bg-[#111111] text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                  Mode Test Actif
+                </span>
               </div>
 
               {orderError && (
-                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-[4px]">
+                <div className="p-2.5 bg-red-50 border border-red-300 text-red-800 text-xs rounded-none">
                   {orderError}
                 </div>
               )}
@@ -627,10 +635,10 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                     key={op.id}
                     type="button"
                     onClick={() => setOperator(op.id as MobileMoneyOperator)}
-                    className={`py-2 px-2 text-xs rounded-[4px] border transition-colors ${
+                    className={`py-2 px-2 text-xs font-semibold uppercase tracking-wider rounded-none border transition-colors ${
                       operator === op.id
                         ? 'bg-[#111111] text-white border-[#111111]'
-                        : 'bg-white text-[#111111] border-[#CCCCCC]'
+                        : 'bg-white text-[#111111] border-[#CCCCCC] hover:border-[#111111]'
                     }`}
                   >
                     {op.label}
@@ -645,7 +653,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="Téléphone Mobile Money"
-                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-[4px]"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-none focus:border-[#111111] focus:outline-none"
                 />
                 <input
                   type="text"
@@ -653,7 +661,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Nom complet"
-                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-[4px]"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-none focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
@@ -664,7 +672,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Ville"
-                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-[4px]"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-none focus:border-[#111111] focus:outline-none"
                 />
                 <input
                   type="text"
@@ -672,7 +680,7 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Quartier / Secteur"
-                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-[4px]"
+                  className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-none focus:border-[#111111] focus:outline-none"
                 />
               </div>
 
@@ -681,83 +689,104 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
                 required
                 value={landmark}
                 onChange={(e) => setLandmark(e.target.value)}
-                placeholder="Point de repère précis"
-                className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-[4px]"
+                placeholder="Point de repère de livraison"
+                className="w-full h-9 px-2.5 text-xs bg-white border border-[#CCCCCC] rounded-none focus:border-[#111111] focus:outline-none"
               />
 
-              <button
-                type="submit"
-                className="w-full h-10 bg-[#111111] hover:bg-[#333333] text-white text-xs font-medium rounded-[4px] transition-colors"
-              >
-                Confirmer la réservation ({(design.price * quantity).toLocaleString('fr-FR')} FCFA)
-              </button>
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  className="w-full h-11 bg-[#111111] hover:bg-[#2A2A2A] text-white text-xs font-bold uppercase tracking-wider rounded-none transition-colors"
+                >
+                  Simuler & Valider le Paiement Test ({(design.price * quantity).toLocaleString('fr-FR')} FCFA)
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => handleCreateOrder(e, false)}
+                  className="w-full h-9 border border-[#CCCCCC] bg-white hover:border-[#111111] text-[#666666] hover:text-[#111111] text-[11px] font-medium rounded-none transition-colors"
+                >
+                  Créer en attente (tester le webhook manuellement)
+                </button>
+              </div>
             </form>
           )}
 
-          {/* Simulateur Webhook Mobile Money (Section 8.2, 8.3 & 11) */}
+          {/* Reçu & Simulateur Webhook Mode Test (Section 8.2, 8.3 & 11) */}
           {highlightedOrder && (
-            <div className="p-4 rounded-[4px] bg-[#F7F7F7] border border-[#E5E5E5] space-y-2.5 text-xs">
+            <div className="p-4 rounded-none bg-[#FAFAFA] border border-[#E5E5E5] space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-[#111111]">
-                  Webhook Prestataire Mobile Money
+                <span className="font-bold uppercase tracking-wider text-[#111111]">
+                  Suivi Commande (Mode Test)
                 </span>
-                <span className="px-2 py-0.5 text-[11px] font-medium border border-[#CCCCCC] bg-white rounded-[4px]">
-                  {highlightedOrder.status.toUpperCase()}
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border rounded-none ${
+                    highlightedOrder.status === 'paid'
+                      ? 'bg-[#111111] text-white border-[#111111]'
+                      : 'bg-white text-[#111111] border-[#CCCCCC]'
+                  }`}
+                >
+                  {highlightedOrder.status === 'paid'
+                    ? 'PAYÉE (MODE TEST)'
+                    : highlightedOrder.status.toUpperCase()}
                 </span>
               </div>
 
               <p className="text-[#666666]">
-                Réf : <code className="text-[#111111]">{highlightedOrder.paymentReference}</code> • USSD :{' '}
-                <code className="text-[#111111]">{highlightedOrder.ussdPromptCode}</code>
+                Réf : <code className="text-[#111111]">{highlightedOrder.paymentReference}</code> • Montant :{' '}
+                <strong className="text-[#111111]">
+                  {highlightedOrder.totalAmount.toLocaleString('fr-FR')} FCFA
+                </strong>
               </p>
 
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const res = triggerMobileMoneyWebhook(
-                      highlightedOrder.paymentReference,
-                      'SUCCESS'
-                    )
-                    setWebhookLog(res.message)
-                  }}
-                  className="py-1.5 px-2 bg-[#111111] text-white text-[11px] rounded-[4px] flex items-center justify-center gap-1"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  SUCCESS
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const res = triggerMobileMoneyWebhook(
-                      highlightedOrder.paymentReference,
-                      'FAILED'
-                    )
-                    setWebhookLog(res.message)
-                  }}
-                  className="py-1.5 px-2 border border-[#CCCCCC] bg-white text-[#111111] text-[11px] rounded-[4px] flex items-center justify-center gap-1"
-                >
-                  <XCircle className="w-3.5 h-3.5" />
-                  FAILED
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const res = triggerMobileMoneyWebhook(
-                      highlightedOrder.paymentReference,
-                      'EXPIRED'
-                    )
-                    setWebhookLog(res.message)
-                  }}
-                  className="py-1.5 px-2 border border-[#CCCCCC] bg-white text-[#111111] text-[11px] rounded-[4px] flex items-center justify-center gap-1"
-                >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  EXPIRED
-                </button>
-              </div>
+              {highlightedOrder.status === 'pending' && (
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const res = triggerMobileMoneyWebhook(
+                        highlightedOrder.paymentReference,
+                        'SUCCESS'
+                      )
+                      setWebhookLog(res.message)
+                    }}
+                    className="py-1.5 px-2 bg-[#111111] text-white text-[11px] font-bold rounded-none flex items-center justify-center gap-1"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    SUCCESS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const res = triggerMobileMoneyWebhook(
+                        highlightedOrder.paymentReference,
+                        'FAILED'
+                      )
+                      setWebhookLog(res.message)
+                    }}
+                    className="py-1.5 px-2 border border-[#CCCCCC] bg-white text-[#111111] text-[11px] rounded-none flex items-center justify-center gap-1"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    FAILED
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const res = triggerMobileMoneyWebhook(
+                        highlightedOrder.paymentReference,
+                        'EXPIRED'
+                      )
+                      setWebhookLog(res.message)
+                    }}
+                    className="py-1.5 px-2 border border-[#CCCCCC] bg-white text-[#111111] text-[11px] rounded-none flex items-center justify-center gap-1"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    EXPIRED
+                  </button>
+                </div>
+              )}
 
               {webhookLog && (
-                <div className="p-2 bg-white border border-[#E5E5E5] rounded-[4px] text-[11px] text-[#111111]">
+                <div className="p-2.5 bg-white border border-[#E5E5E5] rounded-none text-[11px] text-[#111111]">
                   {webhookLog}
                 </div>
               )}

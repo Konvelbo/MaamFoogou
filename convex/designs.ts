@@ -4,6 +4,7 @@ import {
   awardServerXp,
   requireAdmin,
   requireUser,
+  sanitizeSafeUrl,
   sanitizeServerText,
 } from './helpers'
 
@@ -45,13 +46,13 @@ async function hydrateDesignStorageUrls(ctx: any, design: any) {
 }
 
 /**
- * Requête publique : retourne les modèles "À découvrir" sur l'accueil (max 5 par défaut)
+ * Requête publique : retourne les modèles "À découvrir" sur l'accueil
  * Triés par mise en avant admin (featured), puis par nombre de likes et date de publication.
  */
 export const getFeaturedDesigns = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const maxLimit = Math.min(args.limit ?? 5, 12)
+    const maxLimit = Math.min(args.limit ?? 8, 24)
     const published = await ctx.db
       .query('designs')
       .filter((q: any) => q.eq(q.field('status'), 'published'))
@@ -131,6 +132,7 @@ export const saveDesign = mutation({
     designId: v.optional(v.id('designs')),
     name: v.string(),
     description: v.optional(v.string()),
+    theme: v.optional(v.string()),
     tshirtColor: v.string(),
     size: v.optional(v.string()),
     status: v.union(v.literal('draft'), v.literal('published')),
@@ -151,10 +153,13 @@ export const saveDesign = mutation({
         width: v.number(),
         height: v.number(),
         rotation: v.number(),
+        locked: v.optional(v.boolean()),
         text: v.optional(v.string()),
         font: v.optional(v.string()),
         fontSize: v.optional(v.number()),
         color: v.optional(v.string()),
+        strokeColor: v.optional(v.string()),
+        strokeWidth: v.optional(v.number()),
         fileId: v.optional(v.id('_storage')),
         imageUrl: v.optional(v.string()),
         mimeType: v.optional(v.string()),
@@ -166,13 +171,9 @@ export const saveDesign = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx, args.sessionToken)
 
-    // Normalisation stricte (0..1) et refus du base64 dans les documents Convex
+    // Normalisation stricte (0..1) et validation des URLs
     const normalizedElements = args.elements.map((el) => {
-      if (el.imageUrl && el.imageUrl.startsWith('data:')) {
-        throw new Error(
-          'Les images doivent être téléversées dans Convex File Storage (base64 interdit en base).'
-        )
-      }
+      const cleanImageUrl = sanitizeSafeUrl(el.imageUrl)
       return {
         ...el,
         x: Math.max(0, Math.min(1, el.x)),
@@ -180,6 +181,7 @@ export const saveDesign = mutation({
         width: Math.max(0.02, Math.min(1, el.width)),
         height: Math.max(0.02, Math.min(1, el.height)),
         text: el.text ? sanitizeServerText(el.text, 120) : undefined,
+        imageUrl: cleanImageUrl,
       }
     })
 
@@ -197,14 +199,17 @@ export const saveDesign = mutation({
       await ctx.db.patch(args.designId, {
         name: cleanName,
         description: cleanDesc,
+        theme: args.theme ?? existing.theme,
         tshirtColor: args.tshirtColor,
         size: args.size,
         status: args.status,
         price: args.price ?? existing.price ?? 12000,
         previewFront: args.previewFront ?? existing.previewFront,
         previewBack: args.previewBack ?? existing.previewBack,
-        previewFrontUrl: args.previewFrontUrl ?? existing.previewFrontUrl,
-        previewBackUrl: args.previewBackUrl ?? existing.previewBackUrl,
+        previewFrontUrl:
+          sanitizeSafeUrl(args.previewFrontUrl) ?? existing.previewFrontUrl,
+        previewBackUrl:
+          sanitizeSafeUrl(args.previewBackUrl) ?? existing.previewBackUrl,
         printFront: args.printFront ?? existing.printFront,
         printBack: args.printBack ?? existing.printBack,
         elements: normalizedElements,
@@ -219,6 +224,7 @@ export const saveDesign = mutation({
       source: user.role === 'admin' ? 'team' : 'creator',
       name: cleanName,
       description: cleanDesc,
+      theme: args.theme,
       tshirtColor: args.tshirtColor,
       size: args.size ?? 'L',
       status: args.status,
@@ -228,8 +234,8 @@ export const saveDesign = mutation({
       commentsCount: 0,
       previewFront: args.previewFront,
       previewBack: args.previewBack,
-      previewFrontUrl: args.previewFrontUrl,
-      previewBackUrl: args.previewBackUrl,
+      previewFrontUrl: sanitizeSafeUrl(args.previewFrontUrl),
+      previewBackUrl: sanitizeSafeUrl(args.previewBackUrl),
       printFront: args.printFront,
       printBack: args.printBack,
       elements: normalizedElements,

@@ -33,7 +33,7 @@ export const listComments = query({
 
     const enrichedPage = await Promise.all(
       paginated.page.map(async (comment: any) => {
-        const author = await ctx.db.get(comment.userId)
+        const author: any = await ctx.db.get(comment.userId)
         const xpSummary = author
           ? await computeUserXpSummary(ctx, author._id)
           : { level: 1 }
@@ -237,8 +237,8 @@ export const listReportedComments = query({
 
     return await Promise.all(
       reported.map(async (c: any) => {
-        const author = await ctx.db.get(c.userId)
-        const design = await ctx.db.get(c.designId)
+        const author: any = await ctx.db.get(c.userId)
+        const design: any = await ctx.db.get(c.designId)
         return {
           ...c,
           id: c._id,

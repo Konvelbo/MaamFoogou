@@ -29,7 +29,7 @@ function CardCameraRig({
   const { camera } = useThree()
   const isTransitioning = useRef(false)
   const targetAzimuth = useRef(0)
-  const targetDistance = 1.72
+  const targetDistance = 2.38
 
   useEffect(() => {
     targetAzimuth.current = activeSide === 'front' ? 0 : Math.PI
@@ -83,11 +83,11 @@ export const Card3DCanvas: React.FC<Card3DCanvasProps> = React.memo(
     const controlsRef = useRef<OrbitControlsImpl | null>(null)
 
     return (
-      <div className="relative w-full h-full bg-[#E5E5E5] overflow-hidden rounded-none">
+      <div className="relative w-full h-full bg-[#F2F2F2] overflow-hidden rounded-none">
         <Canvas
           frameloop={isVisible ? 'always' : 'demand'}
           dpr={1}
-          camera={{ position: [0, 0, 1.72], fov: 25, near: 0.1, far: 15 }}
+          camera={{ position: [0, 0, 2.38], fov: 28, near: 0.1, far: 15 }}
           gl={{
             antialias: true,
             powerPreference: 'high-performance',
@@ -132,17 +132,17 @@ export const Card3DCanvas: React.FC<Card3DCanvasProps> = React.memo(
             onDeleteElement={() => {}}
           />
 
-          {/* Ombre au sol légère par simple disque (0ms GPU contre 8ms pour ContactShadows) */}
+          {/* Ombre au sol discrète sous le t-shirt (0ms GPU) */}
           <mesh
             rotation={[-Math.PI / 2, 0, 0]}
             position={[0, -0.34, 0]}
-            scale={[0.46, 0.24, 1]}
+            scale={[0.25, 0.08, 1]}
           >
             <circleGeometry args={[1, 24]} />
             <meshBasicMaterial
               color="#000000"
               transparent
-              opacity={0.14}
+              opacity={0.08}
               depthWrite={false}
             />
           </mesh>

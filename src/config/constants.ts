@@ -17,30 +17,133 @@ export const IMAGE_MIN_WIDTH = 500 // Résolution minimale en largeur (px)
 export const IMAGE_MIN_HEIGHT = 500 // Résolution minimale en hauteur (px)
 export const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg']
 
-// Palette de couleurs coton réalistes (inspirée des teintures textiles lourdes 240g/m²)
+// Palette étendue de couleurs coton peigné 240g/m² (18 teintes studio)
 export const TSHIRT_COLOR_PALETTE = [
   { name: 'Noir Carbone', hex: '#18181B' },
-  { name: 'Blanc Craie', hex: '#F4F4F0' },
-  { name: 'Gris Bruyère', hex: '#71717A' },
+  { name: 'Blanc Optique', hex: '#F4F4F0' },
+  { name: 'Écru Naturel', hex: '#EBE5D8' },
+  { name: 'Sable du Sahel', hex: '#D6C7B2' },
+  { name: 'Gris Chiné', hex: '#A1A1AA' },
+  { name: 'Gris Anthracite', hex: '#3F3F46' },
   { name: 'Bleu Nuit', hex: '#1E293B' },
-  { name: 'Vert Sauge', hex: '#2D4A3E' },
-  { name: 'Terracotta', hex: '#9A3412' },
-  { name: 'Sable Désert', hex: '#D6C7B2' },
-  { name: 'Bordeaux', hex: '#4C1D24' },
-  { name: 'Ocre Solaire', hex: '#CA8A04' },
   { name: 'Bleu Cobalt', hex: '#1D4ED8' },
+  { name: 'Bleu Horizon', hex: '#3B82F6' },
+  { name: 'Vert Karité', hex: '#2D4A3E' },
+  { name: 'Vert Émeraude', hex: '#065F46' },
+  { name: 'Kaki Militaire', hex: '#57534E' },
+  { name: 'Ocre Solaire', hex: '#CA8A04' },
+  { name: 'Terracotta Faso', hex: '#9A3412' },
+  { name: 'Rouge Étalon', hex: '#991B1B' },
+  { name: 'Bordeaux Royal', hex: '#4C1D24' },
+  { name: 'Brun Cacao', hex: '#3E2723' },
+  { name: 'Prune Profond', hex: '#4C1D95' },
+] as const
+
+// Palette d'encres d'impression textile pour le texte et les contours
+export const TEXT_COLOR_PALETTE = [
+  { name: 'Blanc Pur', hex: '#FFFFFF' },
+  { name: 'Noir Profond', hex: '#111111' },
+  { name: 'Ivoire Crème', hex: '#F5F2EB' },
+  { name: 'Or Impérial', hex: '#D4AF37' },
+  { name: 'Ocre Faso', hex: '#CA8A04' },
+  { name: 'Jaune Solaire', hex: '#FACC15' },
+  { name: 'Orange Sahel', hex: '#EA580C' },
+  { name: 'Rouge Carmin', hex: '#DC2626' },
+  { name: 'Bordeaux', hex: '#7F1D1D' },
+  { name: 'Rose Poudré', hex: '#F472B6' },
+  { name: 'Violet Studio', hex: '#7C3AED' },
+  { name: 'Bleu Roi', hex: '#2563EB' },
+  { name: 'Bleu Ciel', hex: '#38BDF8' },
+  { name: 'Vert Émeraude', hex: '#10B981' },
+  { name: 'Vert Forêt', hex: '#14532D' },
+  { name: 'Argent Métal', hex: '#CBD5E1' },
 ] as const
 
 // Tailles disponibles
 export const TSHIRT_SIZES: Array<TShirtSize> = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
-// Polices disponibles pour la personnalisation texte
+// Panoplie complète de 16 typographies pour le Studio 3D
 export const AVAILABLE_FONTS = [
-  { label: 'Sans-Serif Moderne (Inter)', value: 'Inter, system-ui, sans-serif' },
-  { label: 'Impact Sport (Impact)', value: 'Impact, Haettenschweiler, sans-serif' },
-  { label: 'Éditorial Serif (Georgia)', value: 'Georgia, Cambria, serif' },
-  { label: 'Monospace Tech (Courier)', value: '"Courier New", Courier, monospace' },
-  { label: 'Urbain Bold (Trebuchet)', value: '"Trebuchet MS", sans-serif' },
+  {
+    label: 'Plus Jakarta Sans',
+    category: 'Moderne',
+    value: '"Plus Jakarta Sans", system-ui, sans-serif',
+  },
+  {
+    label: 'Montserrat Bold',
+    category: 'Géométrique',
+    value: '"Montserrat", sans-serif',
+  },
+  {
+    label: 'Syne Avant-Garde',
+    category: 'Créateur',
+    value: '"Syne", sans-serif',
+  },
+  {
+    label: 'Unbounded Wide',
+    category: 'Streetwear',
+    value: '"Unbounded", sans-serif',
+  },
+  {
+    label: 'Bebas Neue',
+    category: 'Condensé',
+    value: '"Bebas Neue", Impact, sans-serif',
+  },
+  {
+    label: 'Anton Display',
+    category: 'Ultra-Bold',
+    value: '"Anton", Impact, sans-serif',
+  },
+  {
+    label: 'Oswald Sport',
+    category: 'Athlétique',
+    value: '"Oswald", sans-serif',
+  },
+  {
+    label: 'Impact Classic',
+    category: 'Impact',
+    value: 'Impact, Haettenschweiler, sans-serif',
+  },
+  {
+    label: 'Playfair Display',
+    category: 'Couture Serif',
+    value: '"Playfair Display", Georgia, serif',
+  },
+  {
+    label: 'Cormorant Garamond',
+    category: 'Luxe Éditorial',
+    value: '"Cormorant Garamond", Georgia, serif',
+  },
+  {
+    label: 'Cinzel Prestige',
+    category: 'Monumental',
+    value: '"Cinzel", Georgia, serif',
+  },
+  {
+    label: 'Georgia Classique',
+    category: 'Serif',
+    value: 'Georgia, Cambria, serif',
+  },
+  {
+    label: 'Space Mono',
+    category: 'Tech Lab',
+    value: '"Space Mono", monospace',
+  },
+  {
+    label: 'Courier Brutalist',
+    category: 'Typewriter',
+    value: '"Courier New", Courier, monospace',
+  },
+  {
+    label: 'Caveat Signature',
+    category: 'Manuscrit',
+    value: '"Caveat", cursive',
+  },
+  {
+    label: 'Permanent Marker',
+    category: 'Urbain',
+    value: '"Permanent Marker", cursive',
+  },
 ] as const
 
 // Catalogue de t-shirts déjà faits (calibrés sur le maillage 3D scanné T_Shirt_male)

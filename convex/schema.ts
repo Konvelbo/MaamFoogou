@@ -39,6 +39,7 @@ export default defineSchema({
     source: v.union(v.literal('team'), v.literal('creator')),
     name: v.string(),
     description: v.optional(v.string()),
+    theme: v.optional(v.string()),
     tshirtColor: v.string(),
     size: v.optional(v.string()),
     status: v.union(v.literal('draft'), v.literal('published')),
@@ -73,11 +74,14 @@ export default defineSchema({
         width: v.number(),
         height: v.number(),
         rotation: v.number(),
+        locked: v.optional(v.boolean()),
         // Champs texte
         text: v.optional(v.string()),
         font: v.optional(v.string()),
         fontSize: v.optional(v.number()),
         color: v.optional(v.string()),
+        strokeColor: v.optional(v.string()),
+        strokeWidth: v.optional(v.number()),
         // Champs image (fileId dans Convex Storage, jamais de base64 stocké dans un document)
         fileId: v.optional(v.id('_storage')),
         imageUrl: v.optional(v.string()),

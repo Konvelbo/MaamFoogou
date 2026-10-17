@@ -31,6 +31,8 @@ export interface DesignElement {
   textColor?: string
   strokeColor?: string
   strokeWidth?: number
+  // Verrouillage de l'élément (empêche déplacement, redimensionnement ou suppression accidentels)
+  locked?: boolean
 }
 
 export interface CustomizerState {

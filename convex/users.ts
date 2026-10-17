@@ -3,8 +3,11 @@ import { v } from 'convex/values'
 import {
   awardServerXp,
   computeUserXpSummary,
+  generateSecureToken,
+  hashPassword,
   requireUser,
   sanitizeServerText,
+  verifyPassword,
 } from './helpers'
 
 function generateShortReferralCode(name: string): string {
@@ -13,8 +16,13 @@ function generateShortReferralCode(name: string): string {
       .replace(/[^a-zA-Z]/g, '')
       .toUpperCase()
       .slice(0, 3) || 'MFO'
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `${prefix}-${random}`
+  const randomBytes = new Uint8Array(3)
+  crypto.getRandomValues(randomBytes)
+  const suffix = Array.from(randomBytes)
+    .map((b) => b.toString(36).toUpperCase())
+    .join('')
+    .slice(0, 4)
+  return `${prefix}-${suffix}`
 }
 
 /**
@@ -33,7 +41,14 @@ export const authenticate = mutation({
     referralCode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const cleanEmail = args.email.trim().toLowerCase()
+    const cleanEmail = sanitizeServerText(args.email, 120).toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      throw new Error('Adresse email invalide.')
+    }
+    if (!args.password || args.password.length < 6) {
+      throw new Error('Le mot de passe doit contenir au moins 6 caractères.')
+    }
+
     const existingUser = await ctx.db
       .query('users')
       .withIndex('by_email', (q: any) => q.eq('email', cleanEmail))
@@ -42,7 +57,11 @@ export const authenticate = mutation({
     let user = existingUser
 
     if (args.mode === 'login') {
-      if (!user || user.passwordHash !== args.password) {
+      if (!user) {
+        throw new Error('Email ou mot de passe incorrect.')
+      }
+      const isValid = await verifyPassword(args.password, user.passwordHash)
+      if (!isValid) {
         throw new Error('Email ou mot de passe incorrect.')
       }
     } else {
@@ -75,21 +94,19 @@ export const authenticate = mutation({
         }
       }
 
-      const isAdminEmail =
-        cleanEmail === 'admin@maamfoogou.bf' ||
-        cleanEmail === 'admin@fasodesign.com'
+      const passwordHash = await hashPassword(args.password)
 
       const newUserId = await ctx.db.insert('users', {
         name: cleanName,
         email: cleanEmail,
-        passwordHash: args.password,
+        passwordHash,
         phone: cleanPhone,
         geoCoordinates: {
           city: cleanCity,
           district: cleanDistrict,
           landmark: 'Près du goudron principal',
         },
-        role: isAdminEmail ? 'admin' : 'user',
+        role: 'user',
         referralCode: generateShortReferralCode(cleanName),
         referredByUserId,
         createdAt: Date.now(),
@@ -115,7 +132,7 @@ export const authenticate = mutation({
       throw new Error('Erreur lors de la récupération du profil.')
     }
 
-    const token = `mf_sess_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
+    const token = generateSecureToken('mf_sess', 24)
     await ctx.db.insert('sessions', {
       userId: user._id,
       token,

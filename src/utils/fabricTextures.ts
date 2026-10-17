@@ -129,7 +129,8 @@ export function getCottonWeaveTexture(): THREE.CanvasTexture {
 
 /**
  * Convertit un élément de type 'text' en une texture Canvas 2D haute résolution
- * afin de le plaquer en Decal sur les plis 3D du t-shirt
+ * afin de le plaquer en Decal sur les plis 3D du t-shirt.
+ * Calibre automatiquement la taille de police pour garantir qu'aucun texte ne soit jamais coupé.
  */
 export function createTextDecalTexture(element: DesignElement): THREE.CanvasTexture {
   const canvas = document.createElement('canvas')
@@ -140,19 +141,41 @@ export function createTextDecalTexture(element: DesignElement): THREE.CanvasText
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   const text = element.text?.trim() || 'VOTRE TEXTE'
-  const fontFamily = element.fontFamily || 'Inter, system-ui, sans-serif'
-  const fontSize = (element.fontSize || 56) * 2
+  const fontFamily = element.fontFamily || '"Plus Jakarta Sans", system-ui, sans-serif'
+  const requestedFontSize = Math.min(84, Math.max(24, element.fontSize || 52)) * 1.85
   const textColor = element.textColor || '#FFFFFF'
   const strokeColor = element.strokeColor || '#000000'
-  const strokeWidth = (element.strokeWidth || 0) * 2
+  const strokeWidth = (element.strokeWidth || 0) * 1.8
 
-  ctx.font = `bold ${fontSize}px ${fontFamily}`
+  const lines = text.split('\n')
+  const safeMaxWidth = canvas.width * 0.80 - strokeWidth * 4
+  const safeMaxHeight = canvas.height * 0.78 - strokeWidth * 4
+
+  // Calibrage automatique pour éviter toute coupure horizontale ou verticale
+  let fittedFontSize = requestedFontSize
+  ctx.font = `700 ${fittedFontSize}px ${fontFamily}`
+
+  let maxMeasuredWidth = 0
+  for (const line of lines) {
+    const w = ctx.measureText(line).width
+    if (w > maxMeasuredWidth) maxMeasuredWidth = w
+  }
+
+  if (maxMeasuredWidth > safeMaxWidth && maxMeasuredWidth > 0) {
+    fittedFontSize = Math.floor(fittedFontSize * (safeMaxWidth / maxMeasuredWidth))
+  }
+
+  const estTotalHeight = lines.length * fittedFontSize * 1.2
+  if (estTotalHeight > safeMaxHeight && estTotalHeight > 0) {
+    fittedFontSize = Math.floor(fittedFontSize * (safeMaxHeight / estTotalHeight))
+  }
+
+  fittedFontSize = Math.max(24, fittedFontSize)
+  ctx.font = `700 ${fittedFontSize}px ${fontFamily}`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
 
-  // Gestion du multi-lignes éventuel
-  const lines = text.split('\n')
-  const lineHeight = fontSize * 1.18
+  const lineHeight = fittedFontSize * 1.18
   const totalHeight = lines.length * lineHeight
   const startY = (canvas.height - totalHeight) / 2 + lineHeight / 2
 
@@ -160,6 +183,7 @@ export function createTextDecalTexture(element: DesignElement): THREE.CanvasText
     const y = startY + index * lineHeight
     if (strokeWidth > 0) {
       ctx.lineJoin = 'round'
+      ctx.miterLimit = 2
       ctx.lineWidth = strokeWidth * 2
       ctx.strokeStyle = strokeColor
       ctx.strokeText(line, canvas.width / 2, y)
@@ -169,8 +193,11 @@ export function createTextDecalTexture(element: DesignElement): THREE.CanvasText
   })
 
   const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.ClampToEdgeWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
   texture.anisotropy = 8
   texture.colorSpace = THREE.SRGBColorSpace
   texture.needsUpdate = true
   return texture
 }
+

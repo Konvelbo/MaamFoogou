@@ -185,7 +185,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
       className="group flex flex-col bg-white cursor-pointer select-none"
     >
       {/* Modèle 3D permanent (Card3DCanvas) : aucun démontage au scroll et aucun SVG 2D affiché */}
-      <div className="relative aspect-[3/4] w-full bg-[#E5E5E5] overflow-hidden rounded-none">
+      <div className="relative aspect-[3/4] w-full bg-[#F2F2F2] overflow-hidden rounded-none">
         <Card3DCanvas
           color={currentSlide.color}
           size={(design.size as TShirtSize) || 'L'}
@@ -194,23 +194,17 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
           elements={elements3D}
         />
 
-        {/* Badges minimalistes en haut à gauche (rounded-[4px] max) */}
-        <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5 z-10">
-          <span
-            className={`px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider rounded-[4px] ${
-              design.source === 'team'
-                ? 'bg-[#0F5132] text-white'
-                : 'bg-[#111111] text-white'
-            }`}
-          >
-            {design.source === 'team' ? 'COLLECTION 3D' : 'CRÉATEUR 3D'}
+        {/* Badges minimalistes BZB en haut à gauche (0px border-radius) */}
+        <div className="pointer-events-none absolute top-2.5 left-2.5 flex flex-col items-start gap-1 z-10">
+          <span className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] bg-white text-[#111111] border border-[#E5E5E5] rounded-none">
+            {design.source === 'team' ? 'ATELIER' : 'CRÉATEUR'}
           </span>
-          <span className="px-2 py-0.5 text-[9px] font-medium bg-white/90 text-[#111111] rounded-[3px]">
+          <span className="px-1.5 py-0.5 text-[9px] font-medium bg-white/90 text-[#666666] rounded-none">
             {currentSlide.label}
           </span>
         </div>
 
-        {/* Bouton Like minimaliste en haut à droite (rounded-[4px]) */}
+        {/* Bouton Like minimaliste en haut à droite (0px border-radius) */}
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
@@ -221,7 +215,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
               ? 'Retirer des favoris'
               : 'Liker et sauvegarder pour acheter plus tard'
           }
-          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-[4px] flex items-center justify-center transition-colors duration-200 ${
+          className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-none flex items-center justify-center transition-colors duration-200 ${
             optimisticLiked
               ? 'bg-[#111111] text-white'
               : 'bg-white/90 text-[#111111] hover:bg-white'
@@ -235,7 +229,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
 
       {/* Barre d'indicateurs segmentée fine sous le modèle 3D (2px, style BZB) */}
       <div
-        className="w-full h-[2px] bg-[#E5E5E5] mt-2 flex"
+        className="w-full h-[2px] bg-[#E5E5E5] mt-1.5 flex"
         onPointerDown={(e) => e.stopPropagation()}
         onPointerUp={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -260,7 +254,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
         onClick={() => onSelectDesign(design.id)}
         className="pt-2.5 pb-1 flex flex-col gap-1"
       >
-        {/* Pastilles de variantes de couleur (rounded-[2px]) */}
+        {/* Pastilles de variantes de couleur (0px border-radius) */}
         <div
           className="flex items-center gap-1.5 mb-0.5"
           onClick={(e) => e.stopPropagation()}
@@ -275,7 +269,7 @@ export const FeaturedDesignCard: React.FC<FeaturedDesignCardProps> = ({
                 )
                 if (targetIdx >= 0) setActiveSlide(targetIdx)
               }}
-              className="w-3.5 h-3.5 rounded-[2px] border border-[#D4D4D4]"
+              className="w-3.5 h-3.5 rounded-none border border-[#CCCCCC]"
               style={{ backgroundColor: hex }}
               title="Tester cette couleur en 3D"
             />
